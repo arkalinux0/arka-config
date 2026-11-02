@@ -1,0 +1,85 @@
+# This file demonstrates all available theme configuration options for Vicinae.
+# You don't need to define all of these: only override what you want to customize.
+# Undefined colors will be automatically derived from core colors or inherited from base themes.
+#
+# Check out the full documentation at https://docs.vicinae.com/theming/getting-started
+
+[meta]
+name = "Matugen Dark"
+description = "Matugen theme generated from Vicinae theme template"
+variant = "dark"                              # "dark" | "light": impacts what icon to show in some circumstances
+
+[colors.core]
+accent = "{{colors.primary.dark.hex}}"
+accent_foreground = "{{colors.on_primary.dark.hex}}"
+background = "{{colors.inverse_primary.dark.hex}}"
+foreground = "{{colors.primary_fixed.dark.hex}}"
+secondary_background = "{{colors.on_primary_fixed_variant.dark.hex}}"
+border = "{{colors.source_color.dark.hex}}"
+
+[colors.main_window]
+border = "{{colors.source_color.dark.hex}}"
+footer = { background = "colors.core.secondary_background" }
+
+[colors.settings_window]
+border = "{{colors.source_color.dark.hex}}"
+
+[colors.accents]
+blue = "#2f6fed"
+green = "#3a9c61"
+magenta = "#bc8cff"
+orange = "#f0883e"
+red = "#b9543b"
+yellow = "#c9a76e"
+cyan = "#18a5b3"
+purple = "#bc8cff"
+
+# For now, shortcuts cannot have their own dedicated background
+[colors.shortcut]
+border = "colors.core.border"
+
+[colors.text]
+default = "colors.core.foreground"
+muted = "{{colors.tertiary.dark.hex}}"
+danger = "{{colors.error.dark.hex}}"
+success = "{{colors.surface_tint.dark.hex}}"
+placeholder = "{{colors.tertiary_container.dark.hex}}"
+selection = { background = "{{colors.secondary.dark.hex}}", foreground = "{{colors.on_secondary.dark.hex}}" }
+
+[colors.text.links]
+default = "#c9a76e"
+visited = "#bc8cff"
+
+[colors.input]
+border = "#2a241c"
+border_focus = "#b8944e"
+border_error = "#b9543b"
+
+[colors.button.primary]
+background = "{{colors.primary_fixed.dark.hex}}"
+foreground = "{{colors.inverse_primary.dark.hex}}"
+hover = { background = "#bb1c1d23" }
+focus = { outline = "colors.core.accent" }
+
+[colors.list.item.hover]
+foreground = "{{colors.secondary.dark.hex}}"
+secondary_foreground = "{{colors.tertiary.dark.hex}}"
+
+[colors.list.item.selection]
+background = "{{colors.secondary_container.dark.hex}}"
+foreground = "{{colors.secondary.dark.hex}}"
+secondary_background = "{{colors.tertiary_container.dark.hex}}"
+secondary_foreground = "{{colors.tertiary.dark.hex}}"
+
+[colors.grid.item]
+background = "{{colors.primary_container.dark.hex}}"
+hover = { outline = "{{colors.source_color.dark.hex}}" }
+selection = { outline = "{{colors.source_color.dark.hex}}" }
+
+[colors.scrollbars]
+background = "{{colors.on_primary_fixed_variant.dark.hex}}"
+
+[colors.loading]
+bar = "{{colors.tertiary.dark.hex}}"
+spinner = "{{colors.tertiary.dark.hex}}"
+

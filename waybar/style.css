@@ -1,0 +1,135 @@
+@import url("../../.config/matugen/generated/waybar-colors.css");
+
+* {
+    font-family: "JetBrainsMono Nerd Font", "Noto Sans", sans-serif;
+    font-size: 13px;
+    font-weight: bold;
+    min-height: 0;
+    border: none;
+    border-radius: 0;
+}
+
+window#waybar {
+    background: transparent;
+    color: @on_surface;
+}
+
+window#waybar > box {
+    padding: 4px;
+    background-color: alpha(@surface_dim, 0.4);
+    border-radius: 25px;
+    border: 1px solid @outline_variant;
+}
+
+/* UNIFIED CAPSULE STYLE */
+#clock,
+#custom-notification,
+#workspaces,
+#pulseaudio,
+#battery,
+#cpu,
+#custom-temperature,
+#custom-rpms,
+#custom-cpufreq,
+#custom-network,
+#memory,
+#custom-gpu,
+#custom-powerprofile,
+#temperature,
+#network,
+#tray,
+#cavagroup {
+    background-color: @surface_container;
+    min-width: 20px;
+    color: @on_surface;
+    border-radius: 50px;
+    
+    margin: 1px 1px; 
+    font-size: 15px;
+    
+    padding: 0px 7px 0px 8px;
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.3);
+    opacity: 0.82;
+    border: 2px solid @outline_variant;
+}
+
+/* --- LEFT SECTION --- */
+#clock {
+    background-color: @primary_container;
+    color: @on_primary_container;
+    font-size: 12px; 
+    padding-left: 8px;
+    padding-right: 8px;
+    margin-left: 5px; /* add some spacing from the left edge */
+}
+
+#custom-notification {
+    color: @on_surface_variant;
+    padding-left: 4px;
+}
+
+#cpu, #memory, #custom-temperature, #custom-rpms, #custom-gpu, #custom-cpufreq, #custom-powerprofile {
+    background-color: @secondary_container;
+    color: @on_secondary_container;
+    margin: 0 2px;
+    font-size: 12px;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+#cpu.critical, 
+#memory.critical, 
+#temperature.critical {
+    color: @error;
+}
+
+/* --- CENTER SECTION --- */
+#workspaces {
+    background-color: @surface_container_high;
+    padding: 0 6px;
+}
+
+#workspaces button {
+    padding: 0 2px;
+    margin: 6px 2px;
+    border-radius: 16px;
+    color: @on_surface_variant;
+    background: transparent;
+    transition: all 0.2s ease;
+}
+
+#workspaces button.active {
+    background-color: @primary;
+    padding: 0 8px;
+    color: @on_primary;
+}
+
+#workspaces button.urgent {
+    background-color: @error;
+    color: @on_error;
+}
+
+#workspaces button:hover {
+    background-color: @surface_container_high;
+    color: @primary;
+}
+
+/* --- RIGHT SECTION --- */
+#pulseaudio, #battery {
+    font-size: 12px; 
+    padding: 0 8px;
+}
+
+#battery {
+    margin-right: 5px; /* add some spacing from the right edge */
+}
+
+#battery.charging { color: @tertiary; }
+#battery.warning { color: @error; }
+
+/* --- CAVA GROUP --- */
+
+#custom-cava,
+#custom-playerinfo {
+    padding: 2px;
+}

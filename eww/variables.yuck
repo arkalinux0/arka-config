@@ -1,0 +1,42 @@
+;; ===== Stato UI (toggle dei pannelli) =====
+(defvar calendar-visible false)
+(defvar battery-details-visible false)
+(defvar cpu-details-visible false)
+(defvar ram-details-visible false)
+(defvar volume-slider-visible false)
+(defvar power-profiles-setter-visible false)
+(defvar cava-expansion-visible false)
+(defvar power-menu-visible false)
+
+;; ===== Orologio / calendario =====
+(defpoll time :interval "1s" `date +%H:%M:%S`)
+(defpoll day :interval "1h" `date +%d`)
+(defpoll month :interval "1h" `date +%m`)
+(defpoll year :interval "1h" `date +%Y`)
+
+;; ===== Audio =====
+;; Prima: defpoll ogni 10ms (100 chiamate/s a wpctl, sempre, anche da fermo).
+;; Ora: deflisten event-driven, si aggiorna solo quando pipewire segnala
+;; un cambiamento di volume/mute.
+(deflisten volume-state :initial `{"volume": 0, "muted": false}` "python -u scripts/volume.py")
+(defvar set-volume 0)
+
+;; ===== Hyprland =====
+;; Prima: defpoll ogni 100ms che lanciava due hyprctl ogni volta.
+;; Ora: deflisten sul socket IPC di Hyprland, aggiornamento solo sugli
+;; eventi di workspace.
+(deflisten workspaces :initial `{"active": 1}` "python -u scripts/hyprland.py")
+
+;; ===== Media player =====
+(defpoll playerctl-status :interval "1s" `playerctl status 2>/dev/null`)
+(defpoll playerctl-metadata :interval "1s" `playerctl metadata -f "{{ artist }} - {{ title }}" 2>/dev/null`)
+(deflisten cava-playing :initial "" "python -u scripts/text-slide.py")
+(deflisten cava-bars :initial "[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]" "bash scripts/cava.sh")
+(deflisten cava-expanded-bars :initial "[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]" "bash scripts/cava-expanded.sh")
+
+;; ===== Sistema =====
+(defpoll power-profile-label :interval "2s" `python scripts/power_profile.py`)
+(defpoll fan-rpm-label :interval "2s" `python scripts/fan_rpm.py`)
+(deflisten disk-usage-label :initial "" "fish scripts/diskspace.fish")
+(deflisten active-window-usage-label :initial "" "python -u scripts/active_window_usage_snmp.py")
+(deflisten network-usage-label :initial "" "python -u scripts/network.py")

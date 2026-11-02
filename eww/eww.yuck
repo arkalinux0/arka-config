@@ -1,0 +1,7 @@
+;; Config divisa in moduli (prima era tutta in un unico file):
+;;   variables.yuck -> defvar / defpoll / deflisten
+;;   widgets.yuck    -> defwidget
+;;   windows.yuck    -> defwindow
+(include "./variables.yuck")
+(include "./widgets.yuck")
+(include "./windows.yuck")

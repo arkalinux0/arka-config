@@ -1,0 +1,88 @@
+{
+    "layer": "top",
+    "exclusive": false,
+    "reload_style_on_change": true,
+    "position": "top",
+    "spacing": 4,
+    "height": 40,
+    "margin-top": 6,
+    "margin-left": 10,
+    "margin-right": 10,
+    "margin-bottom": 0,
+
+    // ===================================================================
+    // MODULE LAYOUT
+    // ===================================================================
+
+    "modules-left": [ 
+        "cpu",
+        "custom/cpufreq",
+        "memory",
+        "custom/gpu",
+        "custom/temperature",
+        "custom/rpms",
+        "custom/powerprofile"
+    ],
+
+    // ===================================================================
+    // MODULE CONFIGURATION
+    // ===================================================================
+
+    "cpu": {
+        "format": "  {usage} ",
+        "interval": 2,
+        "tooltip-format": "CPU: {usage}%",
+        "states": {
+            "critical": 80
+        }
+    },
+
+    "memory": {
+        "format": "  {percentage}",
+        "interval": 2,
+        "tooltip-format": "Used: {used}GiB",
+        "states": {
+            "critical": 80
+        }
+    },
+
+    "custom/temperature": {
+        "exec": "python3 ~/.config/waybar/scripts/cpu_temp_avg.py",
+        "return-type": "json",
+        "interval": 2,
+        "format": "{}",
+        "tooltip": true
+    },
+
+    "custom/rpms": {
+        "exec": "python3 ~/.config/waybar/scripts/fan_rpm.py",
+        "return-type": "json",
+        "interval": 2,
+        "format": "{}",
+        "tooltip": true
+    },
+
+    "custom/gpu": {
+        "exec": "python3 ~/.config/waybar/scripts/gpu_usage.py",
+        "return-type": "json",
+        "interval": 2,
+        "format": "{}",
+        "tooltip": true
+    },
+
+    "custom/cpufreq": {
+        "exec": "python3 ~/.config/waybar/scripts/cpu_freq.py",
+        "return-type": "json",
+        "interval": 2,
+        "format": "{}",
+        "tooltip": true
+    },
+
+    "custom/powerprofile": {
+        "exec": "python3 ~/.config/waybar/scripts/power_profile.py",
+        "return-type": "json",
+        "interval": 2,
+        "format": "{}"
+    }
+}
+

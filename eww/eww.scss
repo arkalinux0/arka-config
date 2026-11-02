@@ -1,0 +1,228 @@
+// CAREFUL! All defwindows automatically have a CSS class created with the name they were defined with.
+
+@import "colors";
+
+// Variabili "di stile" non legate al tema colori (colors.scss viene
+// rigenerato da matugen, quindi qui dentro ci sta tutto ciò che vuoi
+// che sopravviva a un cambio di wallpaper/tema).
+$radius-lg: 15px;
+$radius-md: 10px;
+$radius-sm: 6px;
+$gap: 5px;
+$transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+$font: "JetBrainsMono Nerd Font", "Noto Sans", sans-serif;
+
+* {
+  font-weight: 500;
+  font-family: $font;
+}
+
+window {
+  background-color: transparent;
+}
+
+.primary {
+  background-color: rgba($background, 0.6);
+  border-radius: 0 0 $radius-lg $radius-lg;
+  border-left: 2px solid $source_color;
+  border-right: 2px solid $source_color;
+  border-bottom: 2px solid $source_color;
+  min-height: 40px;
+  transition: $transition;
+}
+
+.secondary {
+  background-color: rgba($background, 0.5);
+  border-radius: $radius-md $radius-md 0 0;
+  border-left: 2px solid $source_color;
+  border-right: 2px solid $source_color;
+  border-top: 2px solid $source_color;
+  min-height: 15px;
+  transition: $transition;
+}
+
+.container {
+  margin: $gap;
+  background-color: $primary;
+  color: $on_primary;
+  border-radius: $radius-lg;
+  padding: 6px;
+  transition: $transition;
+}
+
+button {
+  background-image: none;
+  background-color: $primary;
+  color: $on_primary;
+  border: none;
+  transition: $transition;
+}
+
+button:hover {
+  background-color: rgba($primary, 0.8);
+}
+
+.secondary-container {
+  margin: 4px;
+  background-color: $primary;
+  color: $on_primary;
+  padding: 1px 7px;
+  border-radius: $radius-lg;
+  transition: $transition;
+}
+
+.battery-details-container, .volume-slider-container, .cava-expansion-container {
+  background-color: rgba($background, 0.6);
+  border-radius: 0 0 $radius-lg $radius-lg;
+}
+
+.battery-details-container {
+  min-height: 150px;
+  min-width: 400px;
+}
+
+.volume-slider-container {
+  min-width: 250px;
+}
+
+.cpu-details-container, .ram-details-container, .power-profiles-setter-container {
+  background-color: rgba($background, 0.6);
+  border-radius: $radius-md $radius-md 0 0;
+  padding: 5px;
+}
+
+.cpu-details-container {
+  min-width: 100px;
+}
+
+.ram-details-container {
+  min-width: 300px;
+}
+
+.power-profiles-setter-container {
+  min-width: 150px;
+
+  button {
+    margin: 2px 0;
+  }
+}
+
+.workspaces {
+  padding: 2px;
+  background-color: $inverse_primary;
+}
+
+.workspace-item {
+  background-color: $primary;
+  color: $on_primary;
+  border-radius: 20px;
+  margin: 1px 2px;
+  padding: 3px 12px;
+  transition: $transition;
+}
+
+.workspace-item:hover {
+  background-color: rgba($primary, 0.7);
+}
+
+.workspace-item.active {
+  background-color: $source_color;
+  padding: 3px 16px;
+}
+
+button.label {
+  padding: 0;
+  border-radius: $radius-lg;
+}
+
+button.notifications {
+  padding: 0 4px 0 3px;
+  border-radius: 60px;
+}
+
+tooltip {
+  border-radius: $radius-lg;
+}
+
+.battery-icon {
+  padding: 0 5px 0 1px;
+}
+
+.volume-icon {
+  padding: 0 7px 0 1px;
+}
+
+.cava-bar,
+.cava-bar > trough {
+  min-height: 15px;
+  min-width: 4px;
+  background-color: transparent;
+}
+
+.cava-bar trough,
+.cava-bar highlight {
+  padding: 0;
+  margin: 0;
+  border: none;
+  border-radius: 0;
+}
+
+.cava-bar {
+  margin: 0 2px;
+}
+
+.cava-label {
+  margin-right: 3px;
+  font-size: 14px;
+  min-width: 145px;
+}
+
+.cava-expanded {
+  background-color: transparent;
+
+  .cava-bar {
+    margin: 0 3px;
+  }
+
+  .cava-bar,
+  .cava-bar > trough {
+    min-height: 120px;
+    min-width: 12px;
+    background-color: transparent;
+  }
+
+  .cava-bar highlight {
+    min-width: 12px;
+  }
+}
+
+// ===== Pulsante e menu power (nuovo) =====
+button.power-button {
+  border-radius: 60px;
+  padding: 0 7px;
+  color: $error;
+}
+
+button.power-button:hover {
+  background-color: rgba($error_container, 0.6);
+}
+
+.power-menu-container {
+  background-color: rgba($background, 0.85);
+  border: 2px solid $source_color;
+  border-radius: 0 0 $radius-lg $radius-lg;
+  padding: 8px;
+}
+
+button.power-menu-item {
+  background-color: $primary;
+  color: $on_primary;
+  border-radius: $radius-md;
+  padding: 8px 16px;
+  margin: 0 4px;
+}
+
+button.power-menu-item:hover {
+  background-color: $error_container;
+  color: $on_error_container;
+}

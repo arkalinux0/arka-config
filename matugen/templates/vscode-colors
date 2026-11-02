@@ -1,0 +1,16 @@
+{{ colors.background.default.hex }}
+{{ colors.error.default.hex }}
+{{ colors.secondary.default.hex | saturate: 20.0, hsl }}
+{{ colors.tertiary.default.hex | saturate: 15.0, hsl }}
+{{ colors.primary.default.hex }}
+{{ colors.tertiary.default.hex }}
+{{ colors.secondary.default.hex }}
+{{ colors.on_surface_variant.default.hex }}
+{{ colors.outline.default.hex }}
+{{ colors.surface_tint.default.hex | saturate: 15.0, hsl }}
+{{ colors.secondary.default.hex | auto_lightness: 10.0 | saturate: 20.0, hsl }}
+{{ colors.tertiary.default.hex | auto_lightness: 10.0 | saturate: 15.0, hsl }}
+{{ colors.primary.default.hex | auto_lightness: 10.0 }}
+{{ colors.tertiary.default.hex | auto_lightness: 10.0 }}
+{{ colors.primary.default.hex }}
+{{ colors.on_background.default.hex }}

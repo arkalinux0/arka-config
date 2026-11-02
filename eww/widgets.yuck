@@ -1,0 +1,36 @@
+(defwidget battery-icon [capacity status]
+  (label :class "battery-icon" :text "${status == 'Charging' ? '󰂄' :
+                  capacity == 100 ? '󰁹' :
+                  capacity >= 90 ? '󰂂' :
+                  capacity >= 80 ? '󰂁' :
+                  capacity >= 70 ? '󰂀' :
+                  capacity >= 60 ? '󰁿' :
+                  capacity >= 50 ? '󰁾' :
+                  capacity >= 40 ? '󰁽' :
+                  capacity >= 30 ? '󰁼' :
+                  capacity >= 20 ? '󰁻' :
+                  capacity >= 10 ? '󰁺' : '󰂎'}"))
+
+(defwidget volume-icon []
+  (label :class "volume-icon" :text "${volume-state.muted ? '󰖁' :
+                                       volume-state.volume >= 66 ? '󰕾' :
+                                       volume-state.volume >= 33 ? '󰖀' : '󰕿'}"))
+
+(defwidget cava [expanded]
+  (revealer :reveal "${playerctl-status == 'Playing'}" :transition "slideleft" :duration "300ms"
+    (button :class "container ${expanded ? 'cava-expanded' : ''}" :onclick "eww update cava-expansion-visible=${!cava-expansion-visible}; eww update volume-slider-visible=false; eww update battery-details-visible=false"
+      (box :space-evenly false
+        (box :visible "${expanded || !cava-expansion-visible}" :space-evenly false
+          (label :class "cava-label" :visible "${!expanded}" :tooltip playerctl-metadata :text cava-playing)
+          (for b in "${expanded ? cava-expanded-bars : cava-bars}"
+            (progress :class "cava-bar" :value b :flipped true :orientation "vertical" :hexpand false :halign "center")))
+      (label :text "Close expansion" :visible "${!expanded && cava-expansion-visible}")))))
+
+(defwidget workspace-item [id mon]
+  (revealer :transition "slideright" :duration "200ms" :reveal "${workspaces['visible_' + id] == true && workspaces["monitor_" + id] == mon}"
+    (button :class "workspace-item ${id == workspaces.active ? 'active' : ''}" :onclick "hyprctl dispatch workspace ${id}"
+      (label :text "${id}"))))
+
+(defwidget power-menu-button []
+  (button :class "container power-button" :onclick "eww update power-menu-visible=${!power-menu-visible}"
+    (label :text "⏻")))

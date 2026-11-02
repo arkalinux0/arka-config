@@ -1,0 +1,110 @@
+{
+    "layer": "top",
+    "exclusive": true,
+    "reload_style_on_change": true,
+    "position": "bottom",
+    "spacing": 4,
+    "height": 46,
+    "margin-top": 0,
+    "margin-left": 10,
+    "margin-right": 10,
+    "margin-bottom": 6,
+
+    // ===================================================================
+    // MODULE LAYOUT
+    // ===================================================================
+    "modules-left": [ 
+        "clock",
+        "custom/notification"
+    ],
+
+    "modules-right": [
+        "group/cavagroup",
+        "tray",
+        "custom/protonvpn",
+        "pulseaudio",
+        "battery"
+    ],
+
+    // ===================================================================
+    // MODULE CONFIGURATION
+    // ===================================================================
+
+    "clock": {
+        "format": "{:%H:%M}", 
+        "tooltip-format": "{:%A, %d %B %Y}",
+        "on-click": "gnome-clocks",
+        "interval": 60
+    },
+
+    "custom/notification": {
+        "format": "{icon}",
+        "format-icons": {
+            "notification": "<span foreground='red'><sup></sup></span>",
+            "none": "",
+            "dnd-notification": "<span foreground='red'><sup></sup></span>",
+            "dnd-none": "",
+            "inhibited-notification": "<span foreground='red'><sup></sup></span>",
+            "inhibited-none": "",
+            "dnd-inhibited-notification": "<span foreground='red'><sup></sup></span>",
+            "dnd-inhibited-none": ""
+        },
+        "return-type": "json",
+        "exec": "swaync-client -swb",
+        "on-click": "swaync-client -t -sw",
+        "on-click-right": "swaync-client -d -sw",
+        "escape": true
+    },
+
+    // --- UPDATED MODULES WITH NUMBERS ---
+
+    "pulseaudio": {
+        "format": "{icon}  {volume}",
+        "format-muted": "󰖁  Mute",
+        "on-click": "pavucontrol",
+        "format-icons": ["", "", ""],
+        "tooltip-format": "Volume: {volume}%"
+    },
+
+    "battery": {
+        "format": "{icon}  {capacity}",
+        "format-charging": "  {capacity}",
+        "format-icons": ["󰂎", "󰁺", "󰁻", "󰁼", "󰁽", "󰁾", "󰁿", "󰂀", "󰂁", "󰂂", "󰁹"],
+        "interval": 5,
+        "tooltip-format": "{timeTo}\nHealth: {health}%"
+    },
+
+    "tray": {
+        "icon-size": 16,
+        "spacing": 8
+    },
+
+    "group/cavagroup": {
+        "orientation": "horizontal",
+        "modules": ["custom/cava", "custom/playerinfo"]
+    },
+
+    "custom/cava": {
+        "format": "{}",
+        "exec": "~/.config/waybar/scripts/cava.sh"
+    },
+
+    "custom/playerinfo": {
+        "format": "&lt; {} &gt;",
+        "exec": "~/.config/waybar/scripts/playerinfo.sh",
+        "escape": true,
+        "return-type": "json",
+        "interval": 1,
+        "tooltip": true,
+        "on-click-middle": "playerctl play-pause",
+        "on-click-right": "playerctl next",
+        "on-click-left": "playerctl previous"
+    },
+
+    "custom/protonvpn": {
+        "format": "{}",
+        "exec": "python ~/.config/waybar/scripts/protonvpn.py",
+        "interval": 3,
+        "on-click": "busctl --user call $(busctl --user list | grep -oP 'org\\.kde\\.StatusNotifierItem-proton\\.vpn\\S+') /MenuBar com.canonical.dbusmenu Event isvu 6 \"clicked\" i 0 0"
+    }
+}
