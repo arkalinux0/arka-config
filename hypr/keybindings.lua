@@ -6,7 +6,7 @@ local mainMod     = "SUPER"
 local terminal    = "kitty"
 local terminal2   = "foot -a footp"
 local fileManager = "nemo"
-local menu        = "rofi -show drun"
+local menu        = "vicinae toggle"
 
 
 -- ---- Utilità generali ---------------------------------------
@@ -64,21 +64,22 @@ hl.bind("F11",            hl.dsp.exec_cmd("python /home/arka/.config/hypr/script
 hl.bind("XF86Launch2",    hl.dsp.exec_cmd("python /home/arka/.config/hypr/scripts/touchpad/main.py"))
 
 
--- ---- Volume (con OSD) --------------------------------------
+-- ---- Dashboard eww ------------------------------------------
+-- Apre/chiude il dashboard sul monitor con il focus
+hl.bind(mainMod .. " + D", hl.dsp.exec_cmd("~/.config/eww/scripts/popup.sh dashboard"))
 
-hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+ && ~/.config/hypr/scripts/volume_osd.sh"))
-hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%- && ~/.config/hypr/scripts/volume_osd.sh"))
-hl.bind("XF86AudioMute",        hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle && ~/.config/hypr/scripts/volume_osd.sh"))
-
--- Volume laptop (locked + repeat)
-hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+"), { locked = true, repeating = true })
-hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"),      { locked = true, repeating = true })
-hl.bind("XF86AudioMute",        hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"),     { locked = true, repeating = true })
-hl.bind("XF86AudioMicMute",     hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"),   { locked = true, repeating = true })
+-- ---- Volume (OSD di eww) -----------------------------------
+-- Prima ogni tasto era legato due volte (con e senza OSD): scattavano
+-- entrambi i bind, quindi il volume cambiava del 10% invece del 5%.
+local osd = "~/.config/eww/scripts/osd.sh"
+hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+ && " .. osd .. " volume"), { locked = true, repeating = true })
+hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%- && " .. osd .. " volume"),      { locked = true, repeating = true })
+hl.bind("XF86AudioMute",        hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle && " .. osd .. " volume"),     { locked = true })
+hl.bind("XF86AudioMicMute",     hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"),   { locked = true })
 
 -- Luminosità
-hl.bind("XF86MonBrightnessUp",   hl.dsp.exec_cmd("brightnessctl -e4 -n2 set 5%+"), { locked = true, repeating = true })
-hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("brightnessctl -e4 -n2 set 5%-"), { locked = true, repeating = true })
+hl.bind("XF86MonBrightnessUp",   hl.dsp.exec_cmd("brightnessctl -e4 -n2 set 5%+ && " .. osd .. " brightness"), { locked = true, repeating = true })
+hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("brightnessctl -e4 -n2 set 5%- && " .. osd .. " brightness"), { locked = true, repeating = true })
 
 -- Media player
 hl.bind("XF86AudioNext",  hl.dsp.exec_cmd("playerctl next"),       { locked = true })

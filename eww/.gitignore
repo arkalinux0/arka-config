@@ -1,2 +1,4 @@
 colors.scss
-examples/
+__pycache__/
+*.pyc
+tests/last-run.log

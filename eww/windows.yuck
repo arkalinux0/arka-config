@@ -1,175 +1,87 @@
-(defwindow bar
-  :monitor 0
-  :geometry (geometry :x "0%"
-                      :y "0%"
-                      :width "97%"
-                      :anchor "top center")
+;; ============================================================
+;;  Barra: tre isole fluttuanti su sfondo trasparente
+;; ============================================================
+;; Una barra per monitor: scripts/session.py apre "bar-N" con --arg monitor=N
+(defwindow bar [monitor]
+  :monitor monitor
+  :geometry (geometry :x "0" :y "0" :width "100%" :anchor "top center")
   :stacking "fg"
   :exclusive true
-  (centerbox :orientation "horizontal" :class "primary" :css `.primary {border-radius: 0 0 ${battery-details-visible || volume-slider-visible || cava-expansion-visible ? 0 : "15px"} ${calendar-visible ? 0 : "15px"};}`
+  :focusable false
+  :namespace "eww-bar"
+  (centerbox :class "bar"
     (box :halign "start" :space-evenly false
-      (button :class "container" :onclick "eww update calendar-visible=${!calendar-visible}"
-        (label :text time))
-      (box :class "container"
-        (button :class "notifications" :onclick "swaync-client --toggle-panel"
-          (label :text "󰂚"))))
-    (box :halign "center" :class "container workspaces" :space-evenly false
-      (workspace-item :id 1 :mon 0)
-      (workspace-item :id 2 :mon 0)
-      (workspace-item :id 3 :mon 0)
-      (workspace-item :id 4 :mon 0)
-      (workspace-item :id 5 :mon 0)
-      (workspace-item :id 6 :mon 0)
-      (workspace-item :id 7 :mon 0)
-      (workspace-item :id 8 :mon 0)
-      (workspace-item :id 9 :mon 0)
-      (workspace-item :id 10 :mon 0))
+      ;; tiene vivo il servizio di sessione (eww avvia un listener solo se usato)
+      (label :visible false :text {session.battery_span})
+      (island-clock)
+      (island-notif)
+      (island-sys))
+    (box :halign "center" :space-evenly false
+      (island-workspaces :monitor monitor))
     (box :halign "end" :space-evenly false
-      (box :class "container"
-        (systray))
-      (cava :expanded false)
-      (button :class "container" :onclick "eww update volume-slider-visible=${!volume-slider-visible}; eww update battery-details-visible=false; eww update cava-expansion-visible=false"
-        (box :space-evenly false
-          (volume-icon)
-          (label :text "${volume-state.volume}")))
-      (button :class "container" :onclick "eww update battery-details-visible=${!battery-details-visible}; eww update volume-slider-visible=false; eww update cava-expansion-visible=false"
-        (box :space-evenly false
-          (battery-icon :capacity {EWW_BATTERY.BAT1.capacity}
-                        :status {EWW_BATTERY.BAT1.status})
-          (label :text "${EWW_BATTERY.BAT1.capacity}%")))
-      (power-menu-button))))
+      (island-media)
+      (island-tray)
+      (island-status))))
 
-(defwindow calendar-window
+;; ============================================================
+;;  Popup
+;; ============================================================
+;; Finestra trasparente a schermo intero sotto i popup: un click qui
+;; chiude il popup aperto. Non copre la barra (rispetta la sua zona
+;; esclusiva), quindi le isole restano cliccabili.
+(defwindow closer
   :monitor 0
-  :geometry (geometry :x "1.5%"
-                      :y "0px"
-                      :anchor "top left")
+  :geometry (geometry :x "0" :y "0" :width "100%" :height "100%" :anchor "top left")
   :stacking "fg"
   :exclusive false
-  (revealer :transition "slidedown" :duration "150ms" :reveal calendar-visible
-    (box :space-evenly false
-      (calendar :day day :month month :year year))))
+  :focusable false
+  :namespace "eww-closer"
+  (eventbox :class "closer"
+            :onclick "${EWW_CONFIG_DIR}/scripts/popup.sh close"
+            :onrightclick "${EWW_CONFIG_DIR}/scripts/popup.sh close"
+            :onscroll "${EWW_CONFIG_DIR}/scripts/popup.sh close"))
 
-(defwindow battery-window
+(defwindow calendar
   :monitor 0
-  :geometry (geometry :x "1.5%"
-                      :y "0px"
-                      :anchor "top right")
-  :stacking "fg"
-  :exclusive false
-  (revealer :transition "slidedown" :duration "150ms" :reveal battery-details-visible
-    (box :space-evenly false :class "battery-details-container" :orientation "vertical"
-      (label :text "Battery level in the last hour")
-      (graph :hexpand true :vexpand true :value "${round(EWW_BATTERY.BAT1.capacity, 1)}" :min 0 :max 100 :time-range "1h" :dynamic false))))
-
-(defwindow secondary
-  :monitor 0
-  :geometry (geometry :x "0%"
-                      :y "0%"
-                      :width "97%"
-                      :anchor "bottom center")
-  :stacking "fg"
-  :exclusive true
-  (centerbox :orientation "horizontal" :class "secondary" :css `.secondary {border-radius: ${cpu-details-visible || ram-details-visible ? 0 : "10px"} 10px 0 0;}`
-    (box :halign "start" :space-evenly false
-      (box :class "secondary-container"
-        (button :class "label" :onclick "eww update cpu-details-visible=${!cpu-details-visible}; eww update ram-details-visible=false"
-          (label :text "CPU: ${round(EWW_CPU.avg, 0)}%")))
-      (box :class "secondary-container"
-        (button :class "label" :onclick "eww update ram-details-visible=${!ram-details-visible}; eww update cpu-details-visible=false"
-          (label :text "RAM: ${round(EWW_RAM.used_mem_perc, 0)}%")))
-      (box :class "secondary-container"
-        (label :text disk-usage-label))
-      (box :class "secondary-container"
-        (label :text fan-rpm-label))
-      (box :class "secondary-container"
-        (label :text network-usage-label)))
-    (box :halign "center" :space-evenly false)
-    (box :halign "end" :space-evenly false
-      (box :class "secondary-container"
-        (label :text active-window-usage-label))
-      (box :class "secondary-container"
-        (button :class "label" :onclick "eww update power-profiles-setter-visible=${!power-profiles-setter-visible}"
-          (label :text power-profile-label))))))
-
-(defwindow cpu-window
-  :monitor 0
-  :geometry (geometry :x "1.5%"
-                      :y "0px"
-                      :anchor "bottom left")
-  :stacking "fg"
-  :exclusive false
-  (revealer :transition "slideup" :duration "150ms" :reveal cpu-details-visible
-    (box :space-evenly false :class "cpu-details-container" :orientation "vertical"
-      (for c in "${EWW_CPU.cores}"
-        (label :text "${c.core}:${c.usage}%")))))
-
-(defwindow ram-window
-  :monitor 0
-  :geometry (geometry :x "1.5%"
-                      :y "0px"
-                      :anchor "bottom left")
-  :stacking "fg"
-  :exclusive false
-  (revealer :transition "slideup" :duration "150ms" :reveal ram-details-visible
-    (box :space-evenly false :class "ram-details-container" :orientation "vertical"
-      (label :text "RAM Usage: ${round(EWW_RAM.used_mem / 1048576, 0)} MB out of${round(EWW_RAM.total_mem / 1048576, 0)} MB")
-      (label :text "Swap Usage: ${round((EWW_RAM.total_swap - EWW_RAM.free_swap) / 1048576, 0)} MB out of${round(EWW_RAM.total_swap / 1048576, 0)} MB"))))
-
-(defwindow volume-window
-  :monitor 0
-  :geometry (geometry :x "1.5%"
-                      :y "0px"
-                      :anchor "top right")
-  :stacking "fg"
-  :exclusive false
-  (revealer :transition "slidedown" :duration "150ms" :reveal volume-slider-visible
-    (box :space-evenly false :class "volume-slider-container" :orientation "vertical"
-      (scale :value 50 :min 0 :max 100 :round-digits 0 :onchange "wpctl set-volume @DEFAULT_AUDIO_SINK@ {}%"))))
-
-(defwindow power-profiles-window
-  :monitor 0
-  :geometry (geometry :x "1.5%"
-                      :y "0px"
-                      :anchor "bottom right")
-  :stacking "fg"
-  :exclusive false
-  (revealer :transition "slideup" :duration "150ms" :reveal power-profiles-setter-visible
-    (box :space-evenly false :class "power-profiles-setter-container" :orientation "vertical"
-      (label :text "Set to...")
-      (button :onclick "powerprofilesctl set power-saver; eww update power-profiles-setter-visible=false" :timeout "1s"
-        (label :text "🔋 Power-saver"))
-      (button :onclick "powerprofilesctl set balanced; eww update power-profiles-setter-visible=false" :timeout "1s"
-        (label :text "⚖️ Balanced"))
-      (button :onclick "powerprofilesctl set performance; eww update power-profiles-setter-visible=false" :timeout "1s"
-        (label :text "⚡ Performance")))))
-
-(defwindow cava-window
-  :monitor 0
-  :geometry (geometry :x "1.5%"
-                      :y "0px"
-                      :anchor "top right")
-  :stacking "fg"
-  :exclusive false
-  (revealer :transition "slidedown" :duration "150ms" :reveal cava-expansion-visible
-    (box :space-evenly false :class "cava-expansion-container" :orientation "vertical"
-      (label :text playerctl-metadata)
-      (cava :expanded true))))
-
-(defwindow power-menu-window
-  :monitor 0
-  :geometry (geometry :x "0%"
-                      :y "0px"
-                      :anchor "top center")
+  :geometry (geometry :x "0px" :y "0px" :anchor "top left")
   :stacking "overlay"
   :exclusive false
-  (revealer :transition "slidedown" :duration "150ms" :reveal power-menu-visible
-    (box :class "power-menu-container" :space-evenly true :orientation "horizontal"
-      (button :class "power-menu-item" :onclick "loginctl lock-session; eww update power-menu-visible=false"
-        (label :text "󰌾  Blocca"))
-      (button :class "power-menu-item" :onclick "hyprctl dispatch exit; eww update power-menu-visible=false"
-        (label :text "󰍃  Esci"))
-      (button :class "power-menu-item" :onclick "systemctl reboot; eww update power-menu-visible=false"
-        (label :text "󰜉  Riavvia"))
-      (button :class "power-menu-item" :onclick "systemctl poweroff; eww update power-menu-visible=false"
-        (label :text "⏻  Spegni")))))
+  :focusable false
+  :namespace "eww-popup"
+  (revealer :transition "slidedown" :duration "200ms" :reveal reveal-calendar
+    (box :class "popup calendar-box"
+      (calendar))))
+
+(defwindow dashboard
+  :monitor 0
+  :geometry (geometry :x "0px" :y "0px" :width "450px" :height "95%" :anchor "top right")
+  :stacking "overlay"
+  :exclusive false
+  :focusable false
+  :namespace "eww-popup"
+  (revealer :transition "slideleft" :duration "200ms" :reveal reveal-dashboard
+    (box :class "popup dashboard"
+      (scroll :vscroll true :hscroll false :vexpand true
+        (box :orientation "v" :space-evenly false :spacing 10 :class "dash-inner"
+          (dash-header)
+          (dash-toggles)
+          (dash-sliders)
+          (dash-weather)
+          (dash-quick)
+          (dash-apps)
+          (dash-media)
+          (dash-system)
+          (dash-window)
+          (dash-network)
+          (dash-power))))))
+
+;; OSD volume/luminosità: aperto/chiuso da scripts/osd.sh (tasti del portatile)
+(defwindow osd
+  :monitor 0
+  :geometry (geometry :x "0" :y "70px" :width "340px" :anchor "bottom center")
+  :stacking "overlay"
+  :exclusive false
+  :focusable false
+  :namespace "eww-osd"
+  (revealer :transition "crossfade" :duration "200ms" :reveal reveal-osd
+    (osd-view)))

@@ -1,13 +1,13 @@
-# This file demonstrates all available theme configuration options for Vicinae.
-# You don't need to define all of these: only override what you want to customize.
-# Undefined colors will be automatically derived from core colors or inherited from base themes.
-#
-# Check out the full documentation at https://docs.vicinae.com/theming/getting-started
+# Tema Vicinae "Light" generato da matugen: modifica questo template, non il file generato.
+# Tenere allineato con vicinae-dark.toml.
+# Le chiavi non definite vengono ereditate da vicinae-light.
+# Riferimento completo: vicinae theme template
 
 [meta]
 name = "Matugen Light"
-description = "Matugen theme generated from Vicinae theme template"
-variant = "light"                              # "dark" | "light": impacts what icon to show in some circumstances
+description = "Colori ricavati dallo sfondo con matugen"
+variant = "light"
+inherits = "vicinae-light"
 
 [colors.core]
 accent = "{{colors.primary.light.hex}}"
@@ -15,24 +15,25 @@ accent_foreground = "{{colors.on_primary.light.hex}}"
 background = "{{colors.surface.light.hex}}"
 foreground = "{{colors.on_surface.light.hex}}"
 secondary_background = "{{colors.surface_container.light.hex}}"
-border = "{{colors.source_color.light.hex}}"
+border = "{{colors.outline_variant.light.hex}}"
 
 [colors.main_window]
-border = "{{colors.source_color.light.hex}}"
+border = "colors.core.border"
 footer = { background = "colors.core.secondary_background" }
 
 [colors.settings_window]
-border = "{{colors.source_color.light.hex}}"
+border = "colors.core.border"
 
+# Tinte con nome: restano fisse e sono scelte per essere leggibili su questo sfondo
 [colors.accents]
-blue = "#2f6fed"
-green = "#3a9c61"
-magenta = "#bc8cff"
-orange = "#f0883e"
-red = "#b9543b"
-yellow = "#c9a76e"
-cyan = "#18a5b3"
-purple = "#bc8cff"
+blue = "#2259d0"
+green = "#1f7a45"
+magenta = "#a2359e"
+orange = "#b0560f"
+red = "#b83f25"
+yellow = "#856615"
+cyan = "#0d7682"
+purple = "#7a44d4"
 
 # For now, shortcuts cannot have their own dedicated background
 [colors.shortcut]
@@ -42,7 +43,7 @@ border = "colors.core.border"
 default = "colors.core.foreground"
 muted = "{{colors.on_surface_variant.light.hex}}"
 danger = "{{colors.error.light.hex}}"
-success = "{{colors.surface_tint.light.hex}}"
+success = "#1f7a45"
 placeholder = "{{colors.outline.light.hex}}"
 selection = { background = "{{colors.secondary.light.hex}}", foreground = "{{colors.on_secondary.light.hex}}" }
 
@@ -51,8 +52,8 @@ default = "{{colors.primary.light.hex}}"
 visited = "{{colors.tertiary.light.hex}}"
 
 [colors.input]
-border = "{{colors.outline_variant.light.hex}}"
-border_focus = "{{colors.primary.light.hex}}"
+border = "colors.core.border"
+border_focus = "colors.core.accent"
 border_error = "{{colors.error.light.hex}}"
 
 [colors.button.primary]
@@ -62,24 +63,23 @@ hover = { background = "#bb{{colors.primary.light.hex_stripped}}" }
 focus = { outline = "colors.core.accent" }
 
 [colors.list.item.hover]
-foreground = "{{colors.secondary.light.hex}}"
-secondary_foreground = "{{colors.tertiary.light.hex}}"
+foreground = "{{colors.on_surface.light.hex}}"
+secondary_foreground = "{{colors.on_surface_variant.light.hex}}"
 
 [colors.list.item.selection]
 background = "{{colors.secondary_container.light.hex}}"
 foreground = "{{colors.on_secondary_container.light.hex}}"
-secondary_background = "{{colors.tertiary_container.light.hex}}"
-secondary_foreground = "{{colors.on_tertiary_container.light.hex}}"
+secondary_background = "{{colors.secondary_container.light.hex}}"
+secondary_foreground = "{{colors.on_secondary_container.light.hex}}"
 
 [colors.grid.item]
-background = "{{colors.primary_container.light.hex}}"
-hover = { outline = "{{colors.source_color.light.hex}}" }
-selection = { outline = "{{colors.source_color.light.hex}}" }
+background = "colors.core.secondary_background"
+hover = { outline = "{{colors.outline.light.hex}}" }
+selection = { outline = "colors.core.accent" }
 
 [colors.scrollbars]
-background = "{{colors.on_primary_fixed_variant.light.hex}}"
+background = "{{colors.outline_variant.light.hex}}"
 
 [colors.loading]
-bar = "{{colors.tertiary.light.hex}}"
-spinner = "{{colors.tertiary.light.hex}}"
-
+bar = "colors.core.accent"
+spinner = "colors.core.accent"

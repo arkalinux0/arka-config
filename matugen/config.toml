@@ -72,6 +72,7 @@ output_path = '~/.local/share/vicinae/themes/matugen-light.toml'
 [templates.vicinae-dark]
 input_path = '~/.config/matugen/templates/vicinae-dark.toml'
 output_path = '~/.local/share/vicinae/themes/matugen-dark.toml'
+post_hook = 'vicinae theme set matugen-dark || true'
 
 [templates.DiscordPlus]
 input_path = '~/.config/matugen/templates/DiscordPlus.theme.css'

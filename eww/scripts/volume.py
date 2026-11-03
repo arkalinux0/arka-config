@@ -1,56 +1,57 @@
 #!/usr/bin/env python3
 """
-Volume del sink audio di default per eww.
-
-La config originale faceva girare `wpctl get-volume` ogni 10ms (100
-volte al secondo, sempre, anche col volume fermo). Qui invece si
-riquerya il volume solo quando pipewire segnala un cambiamento tramite
-`pactl subscribe`. Va usato con (deflisten ...).
+Volume del sink di default (deflisten). Rilegge wpctl solo quando
+pipewire segnala un evento sui sink (pactl subscribe).
+Se pactl manca (TEST_REPORT B8) non si termina: si rilegge ogni 2 s.
+Output: {"volume": 45, "muted": false}
 """
 import json
 import re
 import subprocess
-import sys
+import time
+
+def _die_with_parent():
+    """Il processo figlio riceve SIGTERM se questo script muore (niente orfani)."""
+    import ctypes, signal
+    ctypes.CDLL("libc.so.6", use_errno=True).prctl(1, signal.SIGTERM)  # PR_SET_PDEATHSIG
 
 
-def get_volume():
-    try:
-        out = subprocess.check_output(
-            ["wpctl", "get-volume", "@DEFAULT_AUDIO_SINK@"], text=True
-        ).strip()
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        return None
-
-    # Esempio di output: "Volume: 0.45" oppure "Volume: 0.45 [MUTED]"
-    m = re.match(r"Volume:\s*([\d.]+)\s*(\[MUTED\])?", out)
-    if not m:
-        return None
-
-    volume = int(round(float(m.group(1)) * 100))
-    muted = bool(m.group(2))
-    return {"volume": volume, "muted": muted}
+last = None
 
 
 def emit():
-    state = get_volume()
-    if state is not None:
-        print(json.dumps(state), flush=True)
+    global last
+    try:
+        out = subprocess.check_output(["wpctl", "get-volume", "@DEFAULT_AUDIO_SINK@"],
+                                      text=True, stderr=subprocess.DEVNULL, timeout=3)
+    except (subprocess.CalledProcessError, FileNotFoundError, subprocess.TimeoutExpired):
+        return
+    m = re.match(r"Volume:\s*([\d.]+)\s*(\[MUTED\])?", out.strip())
+    if not m:
+        return
+    state = json.dumps({"volume": round(float(m.group(1)) * 100), "muted": bool(m.group(2))})
+    if state != last:
+        last = state
+        print(state, flush=True)
 
 
 def main():
     emit()
-
-    try:
-        proc = subprocess.Popen(
-            ["pactl", "subscribe"], stdout=subprocess.PIPE, text=True, bufsize=1
-        )
-    except FileNotFoundError:
-        print("pactl non trovato: impossibile ascoltare i cambi di volume", file=sys.stderr)
-        return
-
-    for line in proc.stdout:
-        if "sink" in line:
+    while True:
+        try:
+            proc = subprocess.Popen(preexec_fn=_die_with_parent, args=["pactl", "subscribe"],
+                                    stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True)
+        except FileNotFoundError:
+            # niente pactl: niente eventi, si rilegge a intervalli
+            time.sleep(2)
             emit()
+            continue
+        for line in proc.stdout:
+            if "sink" in line or "server" in line:
+                emit()
+        proc.wait()  # pipewire riavviato: ci si risottoscrive
+        time.sleep(1)  # pipewire non pronto (es. all'avvio): niente loop a vuoto
+        emit()
 
 
 if __name__ == "__main__":

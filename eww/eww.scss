@@ -1,228 +1,735 @@
-// CAREFUL! All defwindows automatically have a CSS class created with the name they were defined with.
-
+// colors.scss è generato da matugen (symlink a ~/.config/eww/colors.scss):
+// qui sotto solo variabili di stile che sopravvivono al cambio tema.
 @import "colors";
 
-// Variabili "di stile" non legate al tema colori (colors.scss viene
-// rigenerato da matugen, quindi qui dentro ci sta tutto ciò che vuoi
-// che sopravviva a un cambio di wallpaper/tema).
-$radius-lg: 15px;
-$radius-md: 10px;
-$radius-sm: 6px;
-$gap: 5px;
-$transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+$radius: 14px;
+$radius-sm: 10px;
+$island-bg: rgba($surface_container, 0.88);
+$card-bg: rgba($surface_container_high, 0.7);
+$ease: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
 $font: "JetBrainsMono Nerd Font", "Noto Sans", sans-serif;
 
+// Ombre: le finestre layer-shell tagliano tutto ciò che esce dai loro
+// bordi, quindi barra e popup hanno un margine interno per farle vedere.
+$shadow-island: 0 3px 8px rgba($shadow, 0.45), inset 0 1px rgba(#ffffff, 0.05);
+$shadow-island-hover: 0 5px 12px rgba($shadow, 0.55), inset 0 1px rgba(#ffffff, 0.07);
+$shadow-popup: 0 10px 26px rgba($shadow, 0.55), 0 2px 6px rgba($shadow, 0.35);
+$shadow-card: 0 2px 6px rgba($shadow, 0.25), inset 0 1px rgba(#ffffff, 0.04);
+$glow-primary: 0 0 10px rgba($primary, 0.45);
+
 * {
-  font-weight: 500;
+  all: unset; // niente stile GTK di default: lo decidiamo tutto qui
   font-family: $font;
+  font-size: 13px;
+  font-weight: 500;
+  color: $on_surface;
 }
 
-window {
+window, .closer {
   background-color: transparent;
 }
 
-.primary {
-  background-color: rgba($background, 0.6);
-  border-radius: 0 0 $radius-lg $radius-lg;
-  border-left: 2px solid $source_color;
-  border-right: 2px solid $source_color;
-  border-bottom: 2px solid $source_color;
-  min-height: 40px;
-  transition: $transition;
+tooltip {
+  background-color: $surface_container_highest;
+  border: 1px solid $outline_variant;
+  border-radius: $radius-sm;
+  padding: 6px 10px;
 }
 
-.secondary {
-  background-color: rgba($background, 0.5);
-  border-radius: $radius-md $radius-md 0 0;
-  border-left: 2px solid $source_color;
-  border-right: 2px solid $source_color;
-  border-top: 2px solid $source_color;
-  min-height: 15px;
-  transition: $transition;
+// ============================================================
+//  Barra
+// ============================================================
+.bar {
+  padding: 6px 12px 11px 12px; // spazio minimo per l'alone delle isole
 }
 
-.container {
-  margin: $gap;
-  background-color: $primary;
-  color: $on_primary;
-  border-radius: $radius-lg;
-  padding: 6px;
-  transition: $transition;
+// Alone nero attorno a ogni isola: solo nella barra, i popup hanno la loro ombra
+.bar .island {
+  box-shadow: 0 0 9px 2px rgba(#000000, 0.75), inset 0 1px rgba(#ffffff, 0.05);
 }
 
-button {
-  background-image: none;
-  background-color: $primary;
-  color: $on_primary;
-  border: none;
-  transition: $transition;
+.bar button.island:hover {
+  box-shadow: 0 0 10px 3px rgba(#000000, 0.85), inset 0 1px rgba(#ffffff, 0.07);
 }
 
-button:hover {
-  background-color: rgba($primary, 0.8);
+.bar .island.open {
+  box-shadow: 0 0 9px 2px rgba(#000000, 0.75), 0 0 10px rgba($primary, 0.45);
 }
 
-.secondary-container {
-  margin: 4px;
-  background-color: $primary;
-  color: $on_primary;
-  padding: 1px 7px;
-  border-radius: $radius-lg;
-  transition: $transition;
+.island {
+  background-color: $island-bg;
+  border: 1px solid rgba($outline_variant, 0.8);
+  border-radius: $radius;
+  padding: 0 14px;
+  min-height: 34px;
+  margin: 0 5px;
+  box-shadow: $shadow-island;
+  transition: $ease;
 }
 
-.battery-details-container, .volume-slider-container, .cava-expansion-container {
-  background-color: rgba($background, 0.6);
-  border-radius: 0 0 $radius-lg $radius-lg;
+button.island:hover {
+  background-color: rgba($surface_container_highest, 0.95);
+  box-shadow: $shadow-island-hover;
 }
 
-.battery-details-container {
-  min-height: 150px;
-  min-width: 400px;
+.island.open {
+  border-color: $primary;
+  box-shadow: $shadow-island, $glow-primary;
 }
 
-.volume-slider-container {
-  min-width: 250px;
+.tray {
+  padding: 0 12px;
+
+  menu {
+    background-color: $surface_container_high;
+    border: 1px solid $outline_variant;
+    border-radius: $radius-sm;
+    padding: 6px;
+    box-shadow: $shadow-popup;
+
+    menuitem {
+      padding: 5px 10px;
+      border-radius: 6px;
+    }
+
+    menuitem:hover {
+      background-color: $secondary_container;
+      label { color: $on_secondary_container; }
+    }
+
+    separator {
+      min-height: 1px;
+      margin: 4px 0;
+      background-color: $outline_variant;
+    }
+  }
 }
 
-.cpu-details-container, .ram-details-container, .power-profiles-setter-container {
-  background-color: rgba($background, 0.6);
-  border-radius: $radius-md $radius-md 0 0;
-  padding: 5px;
+.icon {
+  font-size: 16px;
 }
 
-.cpu-details-container {
-  min-width: 100px;
+.icon.dim {
+  color: $outline;
 }
 
-.ram-details-container {
-  min-width: 300px;
-}
+.clock {
+  .time { font-weight: 700; color: $primary; }
+  .date { color: $on_surface_variant; }
 
-.power-profiles-setter-container {
-  min-width: 150px;
+  .weather-mini {
+    margin-left: 4px;
+    padding-left: 10px;
+    border-left: 1px solid rgba($outline_variant, 0.8);
 
-  button {
-    margin: 2px 0;
+    .icon { color: $tertiary; font-size: 15px; }
   }
 }
 
 .workspaces {
-  padding: 2px;
-  background-color: $inverse_primary;
+  padding: 0 5px;
 }
 
-.workspace-item {
+.ws {
+  min-width: 26px;
+  min-height: 26px;
+  margin: 4px 0;
+  border-radius: 99px;
+  background-color: rgba($surface_variant, 0.6);
+  transition: $ease;
+
+  label { font-size: 12px; color: $on_surface_variant; }
+
+  .ws-num { margin-top: 1px; }
+  .ws-dots { font-size: 7px; margin-top: -5px; margin-bottom: -2px; letter-spacing: -1px; }
+}
+
+.ws:hover {
+  background-color: $secondary_container;
+}
+
+// workspace con il focus (in multi-monitor: "active" = visibile sul suo schermo)
+.ws.active:not(.focused) {
+  background-color: rgba($primary, 0.45);
+  box-shadow: none;
+}
+
+.ws.active {
+  min-width: 42px;
   background-color: $primary;
-  color: $on_primary;
-  border-radius: 20px;
-  margin: 1px 2px;
-  padding: 3px 12px;
-  transition: $transition;
+  box-shadow: $glow-primary;
+
+  label { color: $on_primary; font-weight: 700; }
 }
 
-.workspace-item:hover {
-  background-color: rgba($primary, 0.7);
+.media {
+  .media-text { min-width: 170px; color: $on_surface_variant; }
+  .icon { color: $tertiary; }
 }
 
-.workspace-item.active {
-  background-color: $source_color;
-  padding: 3px 16px;
+.vpn { color: $tertiary; }
+
+// ---- notifiche ----
+.notif {
+  padding: 0 12px;
+  .notif-count { font-weight: 700; }
 }
 
-button.label {
-  padding: 0;
-  border-radius: $radius-lg;
-}
+.notif.has .icon, .notif.has .notif-count { color: $primary; }
+.notif.dnd .icon { color: $outline; }
 
-button.notifications {
-  padding: 0 4px 0 3px;
-  border-radius: 60px;
-}
-
-tooltip {
-  border-radius: $radius-lg;
-}
-
-.battery-icon {
-  padding: 0 5px 0 1px;
-}
-
-.volume-icon {
-  padding: 0 7px 0 1px;
-}
-
-.cava-bar,
-.cava-bar > trough {
-  min-height: 15px;
-  min-width: 4px;
-  background-color: transparent;
-}
-
-.cava-bar trough,
-.cava-bar highlight {
-  padding: 0;
-  margin: 0;
-  border: none;
-  border-radius: 0;
-}
-
-.cava-bar {
-  margin: 0 2px;
-}
-
-.cava-label {
-  margin-right: 3px;
-  font-size: 14px;
-  min-width: 145px;
-}
-
-.cava-expanded {
-  background-color: transparent;
-
-  .cava-bar {
-    margin: 0 3px;
-  }
-
-  .cava-bar,
-  .cava-bar > trough {
-    min-height: 120px;
-    min-width: 12px;
-    background-color: transparent;
-  }
-
-  .cava-bar highlight {
-    min-width: 12px;
-  }
-}
-
-// ===== Pulsante e menu power (nuovo) =====
-button.power-button {
-  border-radius: 60px;
-  padding: 0 7px;
+.battery.low, .battery.low label {
   color: $error;
 }
 
-button.power-button:hover {
-  background-color: rgba($error_container, 0.6);
+// ---- cava ----
+.cava-bar {
+  min-width: 3px;
+  margin: 0 1px;
+
+  trough {
+    min-height: 16px;
+    min-width: 3px;
+    background-color: transparent;
+  }
+
+  progress {
+    min-width: 3px;
+    border-radius: 2px;
+    background-color: $tertiary;
+  }
 }
 
-.power-menu-container {
-  background-color: rgba($background, 0.85);
-  border: 2px solid $source_color;
-  border-radius: 0 0 $radius-lg $radius-lg;
+.cava-big .cava-bar {
+  min-width: 8px;
+  margin: 0 2px;
+
+  trough { min-height: 60px; min-width: 8px; }
+  progress { min-width: 8px; border-radius: 3px; background-color: $primary; }
+}
+
+// ============================================================
+//  Popup
+// ============================================================
+.popup {
+  background-color: rgba($surface, 0.94);
+  border: 1px solid $outline_variant;
+  border-radius: 18px;
+  padding: 12px;
+  margin: 2px 12px 18px 12px; // spazio per l'ombra dentro la finestra
+  box-shadow: $shadow-popup, inset 0 1px rgba(#ffffff, 0.05);
+}
+
+// il calendario era troppo trasparente: si leggeva il testo della finestra
+// sotto (TEST_REPORT B11)
+.popup.calendar-box {
+  background-color: rgba($surface, 0.985);
+}
+
+.calendar-box calendar {
+  padding: 4px;
+
+  &.header { font-weight: 700; color: $primary; }
+  &.button { color: $on_surface_variant; }
+  &:selected { background-color: $primary; color: $on_primary; border-radius: 8px; }
+  &.highlight { color: $primary; font-weight: 700; }
+  &:indeterminate { color: $outline; }
+}
+
+.dash-inner {
+  padding-right: 2px;
+}
+
+scrollbar slider {
+  min-width: 4px;
+  border-radius: 4px;
+  background-color: $outline_variant;
+}
+
+.card {
+  background-color: $card-bg;
+  border: 1px solid rgba($outline_variant, 0.35);
+  border-radius: $radius;
+  padding: 12px;
+  box-shadow: $shadow-card;
+}
+
+.section-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: $primary;
+}
+
+.sub {
+  font-size: 12px;
+  color: $on_surface_variant;
+}
+
+.header {
+  background-image: linear-gradient(135deg, rgba($primary, 0.20), rgba($tertiary, 0.10));
+
+  .avatar {
+    min-width: 56px;
+    min-height: 56px;
+    border-radius: 99px;
+    background-color: $primary;
+    background-size: cover;
+    background-position: center;
+    border: 2px solid rgba($primary_fixed, 0.6);
+    box-shadow: 0 3px 10px rgba($shadow, 0.45), 0 0 12px rgba($primary, 0.35);
+  }
+
+  .avatar-letter { font-size: 26px; font-weight: 700; color: $on_primary; }
+  .hello { font-size: 17px; font-weight: 700; }
+
+  .header-time {
+    font-size: 22px;
+    font-weight: 700;
+    color: $primary;
+    text-shadow: 0 2px 8px rgba($primary, 0.35);
+  }
+  .uptime { font-weight: 700; }
+}
+
+// ---- toggle ----
+.toggle {
+  background-color: $surface_container_highest;
+  border-radius: $radius;
+  transition: $ease;
+
+  .toggle-power {
+    padding: 10px 6px 10px 14px;
+    border-radius: $radius 0 0 $radius;
+  }
+
+  .toggle-main {
+    padding: 10px 10px 10px 6px;
+    border-radius: 0 $radius $radius 0;
+  }
+
+  .toggle-power:hover, .toggle-main:hover { background-color: rgba(#ffffff, 0.06); }
+  .toggle-arrow { font-size: 14px; }
+
+  .toggle-icon { font-size: 20px; }
+  .toggle-title { font-weight: 700; }
+  .toggle-sub { font-size: 11px; color: $on_surface_variant; }
+}
+
+.toggle.expanded { border: 1px solid rgba($primary, 0.6); }
+
+// ---- liste Wi-Fi / Bluetooth ----
+.list {
+  background-color: rgba($surface_container_lowest, 0.55);
+  border-radius: $radius;
   padding: 8px;
+
+  .list-head { margin-bottom: 2px; }
+  .list-title { font-size: 11px; font-weight: 700; color: $primary; margin: 2px 6px 4px 6px; }
+  .list-empty { font-size: 12px; color: $outline; padding: 6px; }
+
+  .list-action {
+    min-width: 26px;
+    min-height: 26px;
+    border-radius: 99px;
+  }
+
+  .list-action:hover { background-color: $surface_bright; }
 }
 
-button.power-menu-item {
+.list-item {
+  padding: 7px 8px;
+  border-radius: $radius-sm;
+  transition: $ease;
+
+  .list-icon { font-size: 16px; color: $on_surface_variant; min-width: 18px; }
+  .list-meta { font-size: 11px; color: $on_surface_variant; }
+}
+
+.list-item:hover { background-color: $surface_container_highest; }
+
+.list-item.active {
+  background-color: rgba($primary, 0.14);
+
+  .list-icon, .list-name { color: $primary; }
+  .list-name { font-weight: 700; }
+}
+
+.toggle.on {
   background-color: $primary;
-  color: $on_primary;
-  border-radius: $radius-md;
-  padding: 8px 16px;
-  margin: 0 4px;
+  box-shadow: 0 3px 10px rgba($primary, 0.35);
+
+  label { color: $on_primary; }
 }
 
-button.power-menu-item:hover {
+.segmented {
+  background-color: $surface_container_highest;
+  border-radius: $radius;
+  padding: 4px;
+}
+
+.seg {
+  border-radius: $radius-sm;
+  padding: 6px 0;
+  transition: $ease;
+
+  label { font-size: 12px; }
+}
+
+.seg:hover { background-color: $surface_bright; }
+
+.seg.on {
+  background-color: $secondary_container;
+  box-shadow: 0 2px 5px rgba($shadow, 0.3);
+
+  label { color: $on_secondary_container; font-weight: 700; }
+}
+
+// ---- slider ----
+.slider {
+  padding: 4px 0;
+
+  .slider-icon {
+    min-width: 34px;
+    min-height: 34px;
+    border-radius: 99px;
+    background-color: $surface_container_highest;
+
+    label { font-size: 16px; }
+  }
+
+  .slider-icon:hover { background-color: $surface_bright; }
+  .slider-val { min-width: 40px; color: $on_surface_variant; }
+}
+
+scale trough {
+  min-height: 8px;
+  border-radius: 99px;
+  background-color: $surface_container_highest;
+}
+
+scale highlight {
+  border-radius: 99px;
+  background-color: $primary;
+}
+
+scale slider {
+  min-width: 16px;
+  min-height: 16px;
+  margin: -4px;
+  border-radius: 99px;
+  background-color: $primary_fixed;
+  box-shadow: 0 1px 4px rgba($shadow, 0.5);
+}
+
+// ---- media ----
+.media-card {
+  .media-title { font-size: 15px; font-weight: 700; }
+}
+
+.media-controls button {
+  min-width: 36px;
+  min-height: 36px;
+  border-radius: 99px;
+  transition: $ease;
+
+  label { font-size: 18px; }
+}
+
+.media-controls button:hover { background-color: $surface_bright; }
+
+.media-controls button.play {
+  background-color: $primary;
+  box-shadow: $glow-primary;
+  label { color: $on_primary; }
+}
+
+// ---- sistema ----
+.ring {
+  background-color: $surface_container_highest; // traccia
+  color: $primary;                              // arco
+}
+
+.ring.hot { color: $error; }
+
+.ring-icon { font-size: 18px; }
+.ring-text { font-weight: 700; }
+.ring-label { font-size: 11px; color: $on_surface_variant; }
+
+.cores {
+  padding: 6px 4px;
+  border-radius: $radius-sm;
+  background-color: rgba($primary, 0.06);
+}
+
+.core-bar {
+  margin: 0 2px;
+
+  trough { min-height: 34px; min-width: 6px; border-radius: 3px; background-color: rgba($surface_variant, 0.5); }
+  progress { min-width: 6px; border-radius: 3px; background-color: $primary; }
+}
+
+.core-bar.hot progress { background-color: $error; }
+
+.info-row {
+  .info-icon { color: $primary; min-width: 18px; }
+  .info-name { color: $on_surface_variant; }
+  .info-value { font-weight: 700; }
+}
+
+// ---- finestra attiva ----
+.win-icon { font-size: 22px; color: $primary; }
+.win-class { font-weight: 700; }
+
+.chip {
+  background-color: $surface_container_highest;
+  border-radius: 99px;
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+// ---- rete ----
+.net-total { font-size: 12px; color: $on_surface_variant; }
+
+.iface {
+  padding: 8px 10px;
+  border-radius: $radius-sm;
+  background-color: rgba($surface_container_highest, 0.5);
+
+  .iface-icon { font-size: 18px; color: $primary; }
+  .iface-name { font-weight: 700; }
+  .iface-ip { font-size: 12px; }
+  .iface-ip6 { font-size: 10px; color: $outline; }
+  .rate { font-size: 11px; color: $on_surface_variant; }
+}
+
+.iface.primary { background-color: rgba($primary, 0.1); }
+
+.iface.down {
+  .iface-icon, label { color: $outline; }
+}
+
+.net-summary {
+  padding: 8px 10px;
+  border-radius: $radius-sm;
+  background-color: rgba($primary, 0.06);
+}
+
+.net-field {
+  .net-key { min-width: 96px; font-size: 11px; color: $on_surface_variant; }
+
+  .net-value {
+    padding: 1px 6px;
+    border-radius: 6px;
+    label { font-size: 12px; font-family: "JetBrainsMono Nerd Font", monospace; }
+  }
+
+  .net-value:hover { background-color: $surface_bright; }
+}
+
+.iface {
+  .iface-badge {
+    font-size: 10px;
+    padding: 1px 7px;
+    border-radius: 99px;
+    color: $on_surface_variant;
+    background-color: $surface_container_highest;
+  }
+
+  .iface-badge.on { color: $on_secondary_container; background-color: $secondary_container; }
+}
+
+.iface.primary .iface-badge { color: $on_primary; background-color: $primary; }
+
+.net-restart {
+  padding: 9px 0;
+  border-radius: $radius-sm;
+  background-color: $surface_container_highest;
+  transition: $ease;
+
+  label { font-weight: 700; }
+  .icon { color: $primary; }
+}
+
+.net-restart:hover {
   background-color: $error_container;
-  color: $on_error_container;
+  label, .icon { color: $on_error_container; }
+}
+
+// ---- meteo ----
+.weather {
+  .weather-icon { font-size: 44px; color: $tertiary; text-shadow: 0 2px 10px rgba($tertiary, 0.35); }
+  .weather-temp { font-size: 28px; font-weight: 700; }
+}
+
+.forecast .day {
+  padding: 8px 0;
+  border-radius: $radius-sm;
+  background-color: $surface_container_highest;
+
+  .day-name { font-size: 11px; font-weight: 700; color: $primary; }
+  .day-icon { font-size: 22px; color: $tertiary; margin: 2px 0; }
+  .day-temp { font-size: 12px; }
+  .day-rain { font-size: 10px; color: $on_surface_variant; }
+}
+
+// ---- app preferite ----
+.app-btn {
+  padding: 10px 0 8px 0;
+  border-radius: $radius;
+  background-color: $surface_container_highest;
+  transition: $ease;
+
+  .app-name { font-size: 11px; }
+}
+
+.app-btn:hover {
+  background-color: $surface_bright;
+  box-shadow: 0 2px 6px rgba($shadow, 0.35);
+}
+
+// ---- storico batteria ----
+.battery-history { margin: 2px 0 4px 0; }
+
+.battery-bars {
+  padding: 6px 4px;
+  border-radius: $radius-sm;
+  background-color: rgba($primary, 0.06);
+}
+
+.battery-bar {
+  margin: 0 1px;
+
+  trough { min-height: 36px; min-width: 3px; border-radius: 2px; background-color: transparent; }
+  progress { min-width: 3px; border-radius: 2px; background-color: rgba($primary, 0.8); }
+}
+
+.battery-bar.low progress { background-color: $error; }
+
+// ---- pulsanti rapidi ----
+.quick-btn {
+  padding: 10px 0;
+  border-radius: $radius;
+  background-color: $surface_container_highest;
+  transition: $ease;
+
+  .quick-icon { font-size: 20px; color: $primary; }
+  .quick-text { font-size: 11px; }
+}
+
+.quick-btn:hover {
+  background-color: $surface_bright;
+  box-shadow: 0 2px 6px rgba($shadow, 0.35);
+}
+
+// ---- OSD ----
+.osd-box {
+  background-color: rgba($surface_container, 0.94);
+  border: 1px solid $outline_variant;
+  border-radius: 99px;
+  padding: 12px 20px;
+  margin: 14px; // spazio per l'ombra
+  // ombra morbida e corta: con 14px+3px di spread sembrava una seconda
+  // "pillola" scura attorno all'OSD (TEST_REPORT B11)
+  box-shadow: 0 3px 10px rgba(#000000, 0.45);
+
+  .osd-icon { font-size: 22px; color: $primary; }
+  .osd-value { min-width: 44px; font-weight: 700; }
+}
+
+.osd-bar {
+  trough {
+    min-height: 8px;
+    border-radius: 99px;
+    background-color: $surface_container_highest;
+  }
+
+  progress {
+    min-height: 8px;
+    border-radius: 99px;
+    background-color: $primary;
+  }
+}
+
+.osd-bar.muted progress { background-color: $outline; }
+
+// ---- sessione ----
+.power-btn {
+  padding: 10px 0;
+  border-radius: $radius;
+  background-color: $surface_container_highest;
+  transition: $ease;
+
+  .power-icon { font-size: 20px; }
+  .power-text { font-size: 11px; }
+}
+
+.power-btn:hover { background-color: $surface_bright; }
+
+.power-btn.poweroff:hover, .power-btn.reboot:hover, .power-btn.logout:hover {
+  background-color: $error_container;
+  label { color: $on_error_container; }
+}
+
+.power-btn.confirm {
+  background-color: $error;
+  box-shadow: 0 0 12px rgba($error, 0.5);
+  label { color: $on_error; font-weight: 700; }
+}
+
+// ============================================================
+//  Dimensioni della barra (solo barra: dashboard e popup invariati)
+//  Prima: isole da 34px e testo 13px su uno schermo 1920x1200 @1.2
+//  sembravano piccole, con tanto spazio vuoto attorno.
+// ============================================================
+.bar {
+  label { font-size: 15px; }
+  .icon { font-size: 19px; }
+
+  .island {
+    min-height: 42px;
+    padding: 0 18px;
+    margin: 0 5px;
+    border-radius: 16px;
+  }
+
+  .clock {
+    .time { font-size: 16px; }
+    .weather-mini { padding-left: 12px; margin-left: 6px; }
+    .weather-mini .icon { font-size: 18px; }
+  }
+
+  .notif .notif-count { font-size: 15px; }
+
+  .workspaces { padding: 0 6px; }
+
+  .ws {
+    min-width: 34px;
+    min-height: 34px;
+    margin: 4px 0;
+
+    label { font-size: 14px; }
+    .ws-num { margin-top: 2px; }
+    .ws-dots { font-size: 8px; margin-top: -5px; }
+  }
+
+  .ws.active { min-width: 54px; }
+
+  .media .media-text { min-width: 210px; }
+
+  .cava-bar {
+    min-width: 4px;
+    trough { min-height: 20px; min-width: 4px; }
+    progress { min-width: 4px; }
+  }
+
+  .battery label { font-size: 15px; }
+}
+
+// ---- isola CPU / RAM / temperatura ----
+.bar .sys {
+  .icon { color: $primary; font-size: 18px; }
+  .sys-value { min-width: 38px; } // larghezza fissa: l'isola non "balla" quando i numeri cambiano
+
+  .sys-stat.warn .icon, .sys-stat.warn .sys-value { color: $tertiary; }
+  .sys-stat.crit .icon, .sys-stat.crit .sys-value { color: $error; font-weight: 700; }
 }

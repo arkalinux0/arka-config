@@ -1,0 +1,21 @@
+; Config cava usata solo da eww (scripts/cava.py). Output raw su stdout.
+[general]
+framerate = 20
+bars = 24
+autosens = 1
+
+[input]
+method = pipewire
+source = auto
+
+[output]
+method = raw
+raw_target = /dev/stdout
+data_format = ascii
+ascii_max_range = 100
+bar_delimiter = 59
+frame_delimiter = 10
+channels = mono
+
+[smoothing]
+noise_reduction = 70

@@ -1,36 +1,450 @@
+;; ============================================================
+;;  Componenti riutilizzabili
+;; ============================================================
 (defwidget battery-icon [capacity status]
-  (label :class "battery-icon" :text "${status == 'Charging' ? '󰂄' :
-                  capacity == 100 ? '󰁹' :
-                  capacity >= 90 ? '󰂂' :
-                  capacity >= 80 ? '󰂁' :
-                  capacity >= 70 ? '󰂀' :
-                  capacity >= 60 ? '󰁿' :
-                  capacity >= 50 ? '󰁾' :
-                  capacity >= 40 ? '󰁽' :
-                  capacity >= 30 ? '󰁼' :
-                  capacity >= 20 ? '󰁻' :
-                  capacity >= 10 ? '󰁺' : '󰂎'}"))
+  (label :class "icon battery-icon"
+         :text {status == "Charging" ? "󰂄" :
+                capacity >= 95 ? "󰁹" : capacity >= 85 ? "󰂂" : capacity >= 75 ? "󰂁" :
+                capacity >= 65 ? "󰂀" : capacity >= 55 ? "󰁿" : capacity >= 45 ? "󰁾" :
+                capacity >= 35 ? "󰁽" : capacity >= 25 ? "󰁼" : capacity >= 15 ? "󰁻" :
+                capacity >= 5 ? "󰁺" : "󰂎"}))
 
 (defwidget volume-icon []
-  (label :class "volume-icon" :text "${volume-state.muted ? '󰖁' :
-                                       volume-state.volume >= 66 ? '󰕾' :
-                                       volume-state.volume >= 33 ? '󰖀' : '󰕿'}"))
+  (label :class "icon"
+         :text {volume.muted ? "󰖁" : volume.volume >= 66 ? "󰕾" : volume.volume >= 33 ? "󰖀" : "󰕿"}))
 
-(defwidget cava [expanded]
-  (revealer :reveal "${playerctl-status == 'Playing'}" :transition "slideleft" :duration "300ms"
-    (button :class "container ${expanded ? 'cava-expanded' : ''}" :onclick "eww update cava-expansion-visible=${!cava-expansion-visible}; eww update volume-slider-visible=false; eww update battery-details-visible=false"
+(defwidget wifi-icon []
+  (label :class "icon"
+         :text {net.primary_kind == "ethernet" ? "󰈀" :
+                !net.wifi.enabled ? "󰤮" :
+                net.wifi.ssid == "" ? "󰤯" :
+                net.wifi.signal >= 80 ? "󰤨" : net.wifi.signal >= 60 ? "󰤥" :
+                net.wifi.signal >= 40 ? "󰤢" : "󰤟"}))
+
+(defwidget bt-icon []
+  (label :class "icon ${bt.powered ? '' : 'dim'}"
+         :text {!bt.powered ? "󰂲" : bt.count > 0 ? "󰂱" : "󰂯"}))
+
+(defwidget cava-bars [values]
+  (box :class "cava" :space-evenly true
+    (for b in values
+      (progress :class "cava-bar" :value b :orientation "vertical" :flipped true))))
+
+;; ============================================================
+;;  Isole della barra
+;; ============================================================
+(defwidget island-clock []
+  (button :class "island clock ${popup == 'calendar' ? 'open' : ''}"
+          :onclick "${EWW_CONFIG_DIR}/scripts/popup.sh calendar"
+    (box :space-evenly false :spacing 8
+      (label :class "time" :text {clock.time})
+      (label :class "date" :text {clock.date})
+      (box :class "weather-mini" :space-evenly false :spacing 4 :visible {weather.ok}
+           :tooltip "${weather.city}: ${weather.desc}, percepiti ${weather.feels}°"
+        (label :class "icon" :text {weather.icon})
+        (label :text "${weather.temp}°")))))
+
+(defwidget island-workspaces [monitor]
+  ;; Hyprland con config Lua: i dispatcher sono espressioni hl.dsp.*
+  ;; L'eventbox sta DENTRO l'isola: in GTK3 ritaglierebbe l'alone.
+  (box :class "island workspaces"
+    (eventbox :onscroll `hyprctl dispatch "hl.dsp.focus({ workspace = 'e$([ {} = up ] && echo - || echo +)1' })"`
+      (box :space-evenly false :spacing 4
+        (for ws in {hypr.workspaces}
+          (button :class "ws ${ws.shown ? 'active' : ''} ${ws.id == hypr.active ? 'focused' : ''}"
+                  :visible {ws.mon == monitor}
+                  :onclick "hyprctl dispatch 'hl.dsp.focus({ workspace = ${ws.id} })'"
+                  :tooltip "${ws.windows} ${ws.windows == 1 ? 'finestra' : 'finestre'}"
+            (box :orientation "v" :space-evenly false :valign "center"
+              (label :class "ws-num" :text {ws.id})
+              (label :class "ws-dots" :text {ws.dots == "" ? " " : ws.dots}))))))))
+
+(defwidget island-media []
+  ;; :visible invece di un revealer: il revealer ritaglierebbe l'alone
+  (box :visible {media.status != "Stopped" && media.title != ""}
+    (button :class "island media ${media.status == 'Playing' ? 'playing' : ''}"
+            :onclick "playerctl play-pause"
+            :onrightclick "${EWW_CONFIG_DIR}/scripts/popup.sh dashboard"
+            :tooltip {media.artist == "" ? media.title : "${media.artist} - ${media.title}"}
+      (box :space-evenly false :spacing 8
+        (label :class "icon" :text {media.status == "Playing" ? "󰝚" : "󰏤"})
+        (label :class "media-text" :text {media.scroll})
+        (box :visible {media.status == "Playing"}
+          (cava-bars :values {cava.small}))))))
+
+(defwidget island-status []
+  (button :class "island status ${popup == 'dashboard' ? 'open' : ''}"
+          :onclick "${EWW_CONFIG_DIR}/scripts/popup.sh dashboard"
+    (box :space-evenly false :spacing 16
+      (label :class "icon vpn" :visible {net.vpn} :text "󰦝" :tooltip "VPN attiva")
+      (box :tooltip {net.wifi.ssid == "" ? "Nessuna rete" : "${net.wifi.ssid} (${net.wifi.signal}%)"}
+        (wifi-icon))
+      (box :tooltip {bt.count > 0 ? "${bt.devices[0]}" : bt.powered ? "Bluetooth acceso" : "Bluetooth spento"}
+        (bt-icon))
+      (eventbox :onscroll "wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%$([ {} = up ] && echo + || echo -)"
+                :tooltip "Volume ${volume.volume}%"
+        (volume-icon))
+      (box :space-evenly false :spacing 4
+           :class "battery ${EWW_BATTERY.BAT1.capacity <= 15 && EWW_BATTERY.BAT1.status != 'Charging' ? 'low' : ''}"
+        (battery-icon :capacity {EWW_BATTERY.BAT1.capacity} :status {EWW_BATTERY.BAT1.status})
+        (label :text "${EWW_BATTERY.BAT1.capacity}%")))))
+
+;; Notifiche swaync: click = pannello, click destro = non disturbare
+(defwidget island-notif []
+  (button :class "island notif ${matches(notif.alt, 'dnd') ? 'dnd' : notif.text != '0' && notif.text != '' ? 'has' : ''}"
+          :onclick "swaync-client -t -sw"
+          :onrightclick "swaync-client -d -sw"
+          :tooltip {matches(notif.alt, "dnd") ? "Non disturbare attivo (click destro per disattivare)" :
+                    notif.text == "0" ? "Nessuna notifica" : "${notif.text} notifiche"}
+    (box :space-evenly false :spacing 6
+      (label :class "icon" :text {matches(notif.alt, "dnd") ? "󰂛" : notif.text != "0" && notif.text != "" ? "󰂞" : "󰂚"})
+      (label :class "notif-count" :visible {notif.text != "0" && notif.text != ""} :text {notif.text}))))
+
+;; CPU / RAM / temperatura (variabili interne di eww, nessuno script).
+;; Giallo sopra il 70% (70°C), rosso sopra il 90% (85°C). Click = dashboard.
+(defwidget sys-stat [icon value text warn crit tip]
+  (box :class "sys-stat ${value >= crit ? 'crit' : value >= warn ? 'warn' : ''}"
+       :space-evenly false :spacing 6 :tooltip tip
+    (label :class "icon" :text icon)
+    (label :class "sys-value" :xalign 1 :text text)))
+
+(defwidget island-sys []
+  (button :class "island sys" :onclick "${EWW_CONFIG_DIR}/scripts/popup.sh dashboard"
+    (box :space-evenly false :spacing 14
+      (sys-stat :icon "󰍛" :value {EWW_CPU.avg} :warn 70 :crit 90
+                :text "${round(EWW_CPU.avg, 0)}%"
+                :tip "CPU: ${round(EWW_CPU.avg, 1)}%")
+      (sys-stat :icon "󰘚" :value {EWW_RAM.used_mem_perc} :warn 70 :crit 90
+                :text "${round(EWW_RAM.used_mem_perc, 0)}%"
+                :tip "RAM: ${round(EWW_RAM.used_mem / 1073741824, 1)} / ${round(EWW_RAM.total_mem / 1073741824, 1)} GB")
+      (sys-stat :icon "󰔏" :value {EWW_TEMPS.CORETEMP_PACKAGE_ID_0} :warn 70 :crit 85
+                :text "${round(EWW_TEMPS.CORETEMP_PACKAGE_ID_0, 0)}°"
+                :tip "Temperatura CPU: ${EWW_TEMPS.CORETEMP_PACKAGE_ID_0}°C"))))
+
+;; Icone delle app (systray): lasciate come sono, nella loro isola
+(defwidget island-tray []
+  (box :class "island tray"
+    (systray :spacing 12 :icon-size 20 :prepend-new true)))
+
+;; ============================================================
+;;  Dashboard
+;; ============================================================
+(defwidget section-title [text]
+  (label :class "section-title" :halign "start" :text text))
+
+(defwidget dash-header []
+  (box :class "card header" :space-evenly false :spacing 14
+    ;; avatar: ~/.face se c'è, altrimenti l'iniziale del nome utente
+    (box :class "avatar" :valign "center" :width 56 :height 56
+         :style {face != "" ? "background-image: url('${face}');" : ""}
+      (label :class "avatar-letter" :visible {face == ""} :hexpand true
+             :text {user.initial}))
+    (box :orientation "v" :space-evenly false :hexpand true :valign "center"
+      (label :class "hello" :halign "start" :text "Ciao, ${user.name}")
+      (label :class "sub" :halign "start" :text "󱎫  acceso da ${uptime}"))
+    (box :orientation "v" :space-evenly false :valign "center"
+      (label :class "header-time" :halign "end" :text {clock.time})
+      (label :class "sub" :halign "end" :text {clock.date}))))
+
+(defwidget dash-weather []
+  (box :class "card weather" :orientation "v" :space-evenly false :spacing 10
+    (box :space-evenly false
+      (section-title :text "Meteo")
+      (label :class "sub" :hexpand true :halign "end"
+             :text {weather.loading ? "aggiornamento…" : weather.updated == "" ? "" : "agg. ${weather.updated}"}))
+    (box :class "segmented" :spacing 4
+      (for c in {weather.cities}
+        (button :class "seg ${weather.city == c ? 'on' : ''}"
+                :onclick "${EWW_CONFIG_DIR}/scripts/weather-set.sh ${c}"
+          (label :text c))))
+    (box :space-evenly false :spacing 14
+      (label :class "weather-icon" :text {weather.icon})
+      (box :orientation "v" :space-evenly false :hexpand true :valign "center"
+        (label :class "weather-temp" :halign "start" :text "${weather.temp}°")
+        (label :class "sub" :halign "start" :text {weather.desc}))
+      (box :orientation "v" :space-evenly false :valign "center" :visible {weather.ok}
+        (label :class "sub" :halign "end" :text "󰔏 ${weather.today_max}° / ${weather.today_min}°")
+        (label :class "sub" :halign "end" :text "percepiti ${weather.feels}°")
+        (label :class "sub" :halign "end" :text "󰖝 ${weather.wind} km/h")))
+    (box :class "forecast" :spacing 6 :visible {weather.ok}
+      (for d in {weather.days}
+        (box :class "day" :orientation "v" :space-evenly false :tooltip {d.desc}
+          (label :class "day-name" :text {d.name})
+          (label :class "day-icon" :text {d.icon})
+          (label :class "day-temp" :text "${d.max}° ${d.min}°")
+          (label :class "day-rain" :text "󰖌 ${d.rain}%"))))))
+
+;; App preferite: icone dal tema di sistema
+(defwidget app-btn [app icon name]
+  (button :class "app-btn" :onclick "${EWW_CONFIG_DIR}/scripts/apps.sh ${app}" :tooltip name
+    (box :orientation "v" :space-evenly false :spacing 4
+      (image :icon icon :icon-size "dnd")
+      (label :class "app-name" :limit-width 10 :text name))))
+
+(defwidget dash-apps []
+  (box :class "card" :orientation "v" :space-evenly false :spacing 8
+    (section-title :text "App")
+    (box :spacing 6
+      (app-btn :app "network" :icon "preferences-system-network" :name "Rete")
+      (app-btn :app "bluetooth" :icon "blueman" :name "Bluetooth")
+      (app-btn :app "proton" :icon "proton-vpn-logo" :name "Proton VPN"))
+    (box :spacing 6
+      (app-btn :app "copyq" :icon "copyq" :name "CopyQ")
+      (app-btn :app "wireshark" :icon "org.wireshark.Wireshark" :name "Wireshark")
+      (app-btn :app "waypaper" :icon "waypaper" :name "Waypaper"))))
+
+(defwidget toggle [icon title sub active onclick expanded onexpand]
+  (box :class "toggle ${active ? 'on' : ''} ${expanded ? 'expanded' : ''}" :hexpand true :space-evenly false
+    (button :class "toggle-power" :onclick onclick :tooltip {active ? "Spegni" : "Accendi"}
+      (label :class "toggle-icon" :text icon))
+    (button :class "toggle-main" :onclick onexpand :hexpand true :tooltip "Mostra la lista"
+      (box :space-evenly false :spacing 6
+        (box :orientation "v" :space-evenly false :hexpand true
+          (label :class "toggle-title" :halign "start" :text title)
+          (label :class "toggle-sub" :halign "start" :text sub :limit-width 13))
+        (label :class "toggle-arrow" :text {expanded ? "󰅀" : "󰅂"})))))
+
+(defwidget dash-toggles []
+  (box :class "card" :orientation "v" :space-evenly false :spacing 8
+    (box :spacing 8
+      (toggle :icon {net.wifi.enabled ? "󰖩" : "󰖪"} :title "Wi-Fi"
+              :sub {!net.wifi.enabled ? "Spento" : net.wifi.ssid == "" ? "Non connesso" : net.wifi.ssid}
+              :active {net.wifi.enabled}
+              :expanded expand-wifi
+              :onexpand "${EWW_CMD} update expand-wifi=${!expand-wifi} expand-bt=false"
+              :onclick "nmcli radio wifi ${net.wifi.enabled ? 'off' : 'on'}; ${EWW_CONFIG_DIR}/scripts/refresh-net.sh")
+      (toggle :icon {bt.powered ? "󰂯" : "󰂲"} :title "Bluetooth"
+              :sub {!bt.powered ? "Spento" : bt.count > 0 ? bt.devices[0] : "Nessun dispositivo"}
+              :active {bt.powered}
+              :expanded expand-bt
+              :onexpand "${EWW_CMD} update expand-bt=${!expand-bt} expand-wifi=false"
+              :onclick `${bt.powered ? 'bluetoothctl power off' : 'rfkill unblock bluetooth; sleep 0.5; bluetoothctl power on'}; ${EWW_CMD} update bt="$(bash ${EWW_CONFIG_DIR}/scripts/bluetooth.sh)"`))
+    (wifi-list-view)
+    (bt-list-view)
+    (box :class "segmented" :spacing 4
+      (button :class "seg ${profile == 'power-saver' ? 'on' : ''}"
+              :onclick "powerprofilesctl set power-saver && ${EWW_CMD} update profile=power-saver"
+        (label :text "󰌪  Risparmio"))
+      (button :class "seg ${profile == 'balanced' ? 'on' : ''}"
+              :onclick "powerprofilesctl set balanced && ${EWW_CMD} update profile=balanced"
+        (label :text "󰾅  Bilanciato"))
+      (button :class "seg ${profile == 'performance' ? 'on' : ''}"
+              :onclick "powerprofilesctl set performance && ${EWW_CMD} update profile=performance"
+        (label :text "󰓅  Prestazioni")))))
+
+(defwidget wifi-list-view []
+  (revealer :transition "slidedown" :duration "200ms" :reveal expand-wifi
+    (box :class "list" :orientation "v" :space-evenly false :spacing 2
+      (box :class "list-head" :space-evenly false
+        (label :class "list-title" :hexpand true :halign "start" :text "Reti disponibili")
+        (button :class "list-action" :tooltip "Cerca reti"
+                :onclick `nmcli dev wifi rescan; sleep 2; ${EWW_CMD} update wifi-list="$(python3 ${EWW_CONFIG_DIR}/scripts/wifi-list.py)"`
+          (label :text "󰑐")))
+      (label :class "list-empty" :visible {wifi-list == "[]"}
+             :text {net.wifi.enabled ? "Ricerca reti…" : "Wi-Fi spento"})
+      (for n in wifi-list
+        (button :class "list-item ${n.active ? 'active' : ''}"
+                :onclick "${EWW_CONFIG_DIR}/scripts/wifi-connect.sh ${n.b64}"
+                :tooltip {n.active ? "Clicca per disconnettere" : n.saved ? "Rete salvata: clicca per connettere" : n.secure ? "Protetta: ti verrà chiesta la password" : "Rete aperta"}
+          (box :space-evenly false :spacing 10
+            (label :class "list-icon"
+                   :text {n.signal >= 75 ? "󰤨" : n.signal >= 50 ? "󰤥" : n.signal >= 25 ? "󰤢" : "󰤟"})
+            (label :class "list-name" :hexpand true :halign "start" :limit-width 26 :text {n.ssid})
+            (label :class "list-meta" :text {n.active ? "connessa" : n.saved ? "salvata" : ""})
+            (label :class "list-meta" :text {n.secure ? "󰌾" : ""})))))))
+
+(defwidget bt-list-view []
+  (revealer :transition "slidedown" :duration "200ms" :reveal expand-bt
+    (box :class "list" :orientation "v" :space-evenly false :spacing 2
+      (label :class "list-title" :halign "start" :text "Dispositivi accoppiati")
+      (label :class "list-empty" :visible {!bt.powered || bt-list == "[]"}
+             :text {bt.powered ? "Nessun dispositivo accoppiato" : "Bluetooth spento"})
+      (box :orientation "v" :space-evenly false :spacing 2 :visible {bt.powered}
+        (for d in bt-list
+          (button :class "list-item ${d.connected ? 'active' : ''}"
+                  :onclick "${EWW_CONFIG_DIR}/scripts/bt-connect.sh ${d.mac}"
+                  :tooltip {d.connected ? "Clicca per disconnettere" : "Clicca per connettere"}
+            (box :space-evenly false :spacing 10
+              (label :class "list-icon"
+                     :text {matches(d.icon, "headset|headphone") ? "󰋋" : matches(d.icon, "audio") ? "󰓃" :
+                            matches(d.icon, "mouse") ? "󰍽" : matches(d.icon, "keyboard") ? "󰌌" :
+                            matches(d.icon, "phone") ? "󰏲" : "󰂯"})
+              (label :class "list-name" :hexpand true :halign "start" :limit-width 26 :text {d.name})
+              (label :class "list-meta" :visible {d.battery != ""} :text "󰁹 ${d.battery}%")
+              (label :class "list-meta"
+                     :text {bt-busy == d.mac ? "connessione…" : d.connected ? "connesso" : ""}))))))))
+
+(defwidget slider [icon value min onchange iconclick]
+  (box :class "slider" :space-evenly false :spacing 10
+    (button :class "slider-icon" :onclick iconclick
+      (label :text icon))
+    (scale :hexpand true :min min :max 101 :round-digits 0 :value value :onchange onchange)
+    (label :class "slider-val" :text "${value}%")))
+
+(defwidget dash-sliders []
+  (box :class "card" :orientation "v" :space-evenly false :spacing 4
+    (slider :icon {volume.muted ? "󰖁" : "󰕾"} :value {volume.volume} :min 0
+            :onchange "wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ {}%"
+            :iconclick "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle")
+    (slider :icon "󰃠" :value brightness :min 5
+            :onchange "brightnessctl -q set {}%"
+            :iconclick "brightnessctl -q set 50%")))
+
+(defwidget dash-media []
+  (revealer :transition "slidedown" :duration "200ms" :reveal {media.title != ""}
+    (box :class "card media-card" :orientation "v" :space-evenly false :spacing 6
+      (label :class "media-title" :halign "start" :limit-width 38 :text {media.title})
+      (label :class "sub" :halign "start" :limit-width 44 :text {media.artist})
+      (box :class "cava-big"
+        (cava-bars :values {cava.big}))
+      (box :class "media-controls" :halign "center" :space-evenly false :spacing 18
+        (button :onclick "playerctl previous" (label :text "󰒮"))
+        (button :class "play" :onclick "playerctl play-pause"
+          (label :text {media.status == "Playing" ? "󰏤" : "󰐊"}))
+        (button :onclick "playerctl next" (label :text "󰒭"))))))
+
+(defwidget ring [value icon text name]
+  (box :class "ring-box" :orientation "v" :space-evenly false :spacing 4
+    (circular-progress :class "ring ${value >= 85 ? 'hot' : ''}" :value value
+                       :thickness 6 :start-at 75 :clockwise true :width 62 :height 62
+      (label :class "ring-icon" :text icon))
+    (label :class "ring-text" :text text)
+    (label :class "ring-label" :text name)))
+
+(defwidget info-row [icon name value]
+  (box :class "info-row" :space-evenly false :spacing 8
+    (label :class "info-icon" :text icon)
+    (label :class "info-name" :hexpand true :halign "start" :text name)
+    (label :class "info-value" :halign "end" :text value)))
+
+(defwidget dash-system []
+  (box :class "card" :orientation "v" :space-evenly false :spacing 8
+    (section-title :text "Sistema")
+    (box :spacing 4
+      (ring :value {EWW_CPU.avg} :icon "󰍛" :name "CPU" :text "${round(EWW_CPU.avg, 0)}%")
+      (ring :value {EWW_RAM.used_mem_perc} :icon "󰘚" :name "RAM" :text "${round(EWW_RAM.used_mem_perc, 0)}%")
+      (ring :value {EWW_DISK["/"].used_perc} :icon "󰋊" :name "Disco /" :text "${round(EWW_DISK["/"].used_perc, 0)}%")
+      (ring :value {EWW_TEMPS.CORETEMP_PACKAGE_ID_0} :icon "󰔏" :name "Temp" :text "${round(EWW_TEMPS.CORETEMP_PACKAGE_ID_0, 0)}°C"))
+    (box :class "cores" :space-evenly true :tooltip "Uso per core"
+      (for c in {EWW_CPU.cores}
+        (progress :class "core-bar ${c.usage >= 85 ? 'hot' : ''}" :value {c.usage}
+                  :orientation "vertical" :flipped true :tooltip "${c.core}: ${c.usage}%")))
+    (info-row :icon "󰘚" :name "RAM"
+              :value "${round(EWW_RAM.used_mem / 1073741824, 1)} / ${round(EWW_RAM.total_mem / 1073741824, 1)} GB")
+    (info-row :icon "󰓡" :name "Swap"
+              :value "${round((EWW_RAM.total_swap - EWW_RAM.free_swap) / 1073741824, 1)} / ${round(EWW_RAM.total_swap / 1073741824, 1)} GB")
+    (info-row :icon "󰋊" :name "/home"
+              :value "${round(EWW_DISK["/home"].used / 1073741824, 0)} / ${round(EWW_DISK["/home"].total / 1073741824, 0)} GB")
+    (box :visible {fans != ""}
+      (info-row :icon "󰈐" :name "Ventole" :value fans))
+    (box :class "battery-history" :orientation "v" :space-evenly false :spacing 4
+         :visible {session.battery_span != ""}
       (box :space-evenly false
-        (box :visible "${expanded || !cava-expansion-visible}" :space-evenly false
-          (label :class "cava-label" :visible "${!expanded}" :tooltip playerctl-metadata :text cava-playing)
-          (for b in "${expanded ? cava-expanded-bars : cava-bars}"
-            (progress :class "cava-bar" :value b :flipped true :orientation "vertical" :hexpand false :halign "center")))
-      (label :text "Close expansion" :visible "${!expanded && cava-expansion-visible}")))))
+        (label :class "info-name" :hexpand true :halign "start" :text "Batteria, ultima ora")
+        (label :class "sub" :text "${session.battery_span} fa → ora"))
+      (box :class "battery-bars" :space-evenly true
+        (for v in {session.battery}
+          (progress :class "battery-bar ${v <= 15 ? 'low' : ''}" :value v
+                    :orientation "vertical" :flipped true :tooltip "${v}%"))))
+    (info-row :icon "󰁹" :name "Batteria"
+              :value "${EWW_BATTERY.BAT1.capacity}% · ${EWW_BATTERY.BAT1.status == 'Charging' ? 'in carica' : EWW_BATTERY.BAT1.status == 'Full' ? 'carica' : EWW_BATTERY.BAT1.status == 'Discharging' ? 'a batteria' : EWW_BATTERY.BAT1.status == 'Not charging' ? 'non in carica' : EWW_BATTERY.BAT1.status}")))
 
-(defwidget workspace-item [id mon]
-  (revealer :transition "slideright" :duration "200ms" :reveal "${workspaces['visible_' + id] == true && workspaces["monitor_" + id] == mon}"
-    (button :class "workspace-item ${id == workspaces.active ? 'active' : ''}" :onclick "hyprctl dispatch workspace ${id}"
-      (label :text "${id}"))))
+(defwidget dash-window []
+  (box :class "card" :orientation "v" :space-evenly false :spacing 6 :visible {activewin.class != ""}
+    (section-title :text "Finestra attiva")
+    (box :space-evenly false :spacing 10
+      (label :class "win-icon" :text "󰖯")
+      (box :orientation "v" :space-evenly false :hexpand true
+        (label :class "win-class" :halign "start" :text {activewin.class})
+        (label :class "sub" :halign "start" :limit-width 40 :text {activewin.title})))
+    (box :spacing 6
+      (label :class "chip" :text "CPU ${activewin.cpu}%")
+      (label :class "chip" :text "RAM ${activewin.ram}")
+      (label :class "chip" :text "${activewin.procs} processi"))))
 
-(defwidget power-menu-button []
-  (button :class "container power-button" :onclick "eww update power-menu-visible=${!power-menu-visible}"
-    (label :text "⏻")))
+;; riga "etichetta  valore" della rete: click sul valore = copia negli appunti.
+;; Il click passa solo il NOME del campo (e dell'interfaccia): copy.sh legge il
+;; valore da eww. Così nessun valore (apostrofi, virgolette...) entra nel comando.
+(defwidget net-field [name value field iface]
+  (box :class "net-field" :space-evenly false :spacing 8 :visible {value != "" && value != "—"}
+    (label :class "net-key" :halign "start" :xalign 0 :text name)
+    (button :class "net-value" :hexpand true :tooltip "Clicca per copiare"
+            :onclick "${EWW_CONFIG_DIR}/scripts/copy.sh ${field} ${iface}"
+      (label :halign "start" :limit-width 34 :text value))))
+
+(defwidget dash-network []
+  (box :class "card network" :orientation "v" :space-evenly false :spacing 8
+    (box :space-evenly false
+      (section-title :text "Rete")
+      (label :class "net-total" :hexpand true :halign "end" :text "↓ ${net.down}   ↑ ${net.up}"))
+
+    ;; riepilogo: IP pubblico, gateway, DNS, dettagli Wi-Fi
+    (box :class "net-summary" :orientation "v" :space-evenly false :spacing 2
+      (net-field :name "Pubblico" :value public-ip :field "public" :iface "")
+      (net-field :name "Gateway" :value "${net.gateway}${net.gw_dev == '' ? '' : '  (' + net.gw_dev + ')'}" :field "gateway" :iface "")
+      (net-field :name "DNS" :value {net.dns} :field "dns" :iface "")
+      (box :visible {net.wifi.ssid != ""} :orientation "v" :space-evenly false :spacing 2
+        (net-field :name "Wi-Fi" :value "${net.wifi.ssid} (${net.wifi.signal}%)" :field "wifi" :iface "")
+        (net-field :name "Banda" :value "${net.wifi.band} · canale ${net.wifi.channel} · ${net.wifi.rate}" :field "band" :iface "")))
+
+    ;; tutte le interfacce, con IP e MAC sempre visibili
+    (box :orientation "v" :space-evenly false :spacing 6
+      (for i in {net.ifaces}
+        (box :class "iface ${i.up ? 'up' : 'down'} ${i.primary ? 'primary' : ''}" :orientation "v" :space-evenly false :spacing 4
+          (box :space-evenly false :spacing 10
+            (label :class "iface-icon"
+                   :text {i.kind == "wifi" ? "󰖩" : i.kind == "vpn" ? "󰦝" : i.kind == "ethernet" ? "󰈀" : "󰒍"})
+            (label :class "iface-name" :halign "start" :text {i.name})
+            (label :class "iface-badge ${i.up ? 'on' : ''}" :valign "center"
+                   :text {i.primary ? "principale" : i.up ? "attiva" : "giù"})
+            (box :hexpand true)
+            (box :orientation "v" :space-evenly false :visible {i.up}
+              (label :class "rate" :halign "end" :text "↓ ${i.down}")
+              (label :class "rate" :halign "end" :text "↑ ${i.up_rate}")))
+          (net-field :name "IPv4" :value {i.ipv4} :field "ipv4" :iface {i.name})
+          (net-field :name "IPv6" :value {i.ipv6} :field "ipv6" :iface {i.name})
+          (net-field :name {i.mac_hw != "" ? "MAC (casuale)" : "MAC"} :value {i.mac} :field "mac" :iface {i.name})
+          (net-field :name "MAC fisico" :value {i.mac_hw} :field "machw" :iface {i.name}))))
+
+    (button :class "net-restart" :onclick "${EWW_CONFIG_DIR}/scripts/net-restart.sh"
+            :tooltip "hostname -i ; nmcli device disconnect enp0s13f0u1; sudo systemctl restart NetworkManager; sleep 10; sleep 10; hostname -i"
+      (box :space-evenly false :spacing 8 :halign "center"
+        (label :class "icon" :text "󰑓")
+        (label :text "Riavvia rete")))))
+
+(defwidget quick-btn [action icon text]
+  (button :class "quick-btn" :onclick "${EWW_CONFIG_DIR}/scripts/quick.sh ${action}"
+    (box :orientation "v" :space-evenly false :spacing 2
+      (label :class "quick-icon" :text icon)
+      (label :class "quick-text" :text text))))
+
+(defwidget dash-quick []
+  (box :class "card" :spacing 8
+    (quick-btn :action "area" :icon "󰩭" :text "Area")
+    (quick-btn :action "screen" :icon "󰍹" :text "Schermo")
+    (quick-btn :action "clipboard" :icon "󰅍" :text "Appunti")
+    (quick-btn :action "folder" :icon "󰉏" :text "Screenshot")))
+
+;; OSD volume/luminosità
+(defwidget osd-view []
+  ;; classe "osd-box", NON "osd": eww dà a ogni finestra una classe col suo nome,
+  ;; e ".osd" stilizzava anche la finestra (seconda capsula scura, TEST_REPORT B11)
+  (box :class "osd-box" :space-evenly false :spacing 12
+    (label :class "osd-icon"
+           :text {osd-kind == "brightness" ? "󰃠" : osd-muted ? "󰖁" : osd-value >= 66 ? "󰕾" : osd-value >= 33 ? "󰖀" : "󰕿"})
+    (progress :class "osd-bar ${osd-muted ? 'muted' : ''}" :value osd-value :hexpand true :valign "center")
+    (label :class "osd-value" :text {osd-muted ? "muto" : "${osd-value}%"})))
+
+(defwidget power-btn [action icon text]
+  (button :class "power-btn ${action} ${power-confirm == action ? 'confirm' : ''}"
+          :onclick "${EWW_CONFIG_DIR}/scripts/power.sh ${action}"
+    (box :orientation "v" :space-evenly false :spacing 2
+      (label :class "power-icon" :text icon)
+      (label :class "power-text" :text {power-confirm == action ? "Conferma?" : text}))))
+
+(defwidget dash-power []
+  (box :class "card power" :spacing 8
+    (power-btn :action "lock" :icon "󰌾" :text "Blocca")
+    (power-btn :action "logout" :icon "󰍃" :text "Esci")
+    (power-btn :action "reboot" :icon "󰜉" :text "Riavvia")
+    (power-btn :action "poweroff" :icon "󰐥" :text "Spegni")))

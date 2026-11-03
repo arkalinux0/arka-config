@@ -1,42 +1,74 @@
-;; ===== Stato UI (toggle dei pannelli) =====
-(defvar calendar-visible false)
-(defvar battery-details-visible false)
-(defvar cpu-details-visible false)
-(defvar ram-details-visible false)
-(defvar volume-slider-visible false)
-(defvar power-profiles-setter-visible false)
-(defvar cava-expansion-visible false)
-(defvar power-menu-visible false)
+;; ============================================================
+;;  Stato UI
+;; ============================================================
+;; popup aperto ("" | "dashboard" | "calendar"), gestito da scripts/popup.sh
+(defvar popup "")
+(defvar reveal-dashboard false)
+(defvar reveal-calendar false)
+;; azione di sessione "armata" in attesa di conferma (scripts/power.sh)
+(defvar power-confirm "")
+;; IP pubblico: sempre visibile nel dashboard (cache 5 min in scripts/public-ip.sh)
+(defpoll public-ip :interval "60s" :run-while reveal-dashboard :initial "…"
+  "bash scripts/public-ip.sh")
+;; liste Wi-Fi / Bluetooth aperte nel dashboard
+(defvar expand-wifi false)
+(defvar expand-bt false)
+(defvar bt-busy "")
+;; OSD volume/luminosità (scripts/osd.sh)
+(defvar osd-kind "volume")
+(defvar osd-value 0)
+(defvar osd-muted false)
+(defvar reveal-osd false)
+;; servizio di sessione: pulizia dopo reload, una barra per monitor,
+;; avvisi e storico batteria (vedi scripts/session.py)
+(deflisten session :initial `{"battery":[],"battery_span":""}`
+  "python3 -u scripts/session.py")
 
-;; ===== Orologio / calendario =====
-(defpoll time :interval "1s" `date +%H:%M:%S`)
-(defpoll day :interval "1h" `date +%d`)
-(defpoll month :interval "1h" `date +%m`)
-(defpoll year :interval "1h" `date +%Y`)
+;; ============================================================
+;;  Sempre attivi (servono alla barra)
+;; ============================================================
+(defpoll clock :interval "5s" :initial `{"time":"--:--","date":""}`
+  `date +'{"time":"%H:%M","date":"%a %d %b"}'`)
 
-;; ===== Audio =====
-;; Prima: defpoll ogni 10ms (100 chiamate/s a wpctl, sempre, anche da fermo).
-;; Ora: deflisten event-driven, si aggiorna solo quando pipewire segnala
-;; un cambiamento di volume/mute.
-(deflisten volume-state :initial `{"volume": 0, "muted": false}` "python -u scripts/volume.py")
-(defvar set-volume 0)
+(deflisten hypr   :initial `{"active":1,"workspaces":[]}`
+  "python3 -u scripts/hyprland.py")
+(deflisten volume :initial `{"volume":0,"muted":false}`
+  "python3 -u scripts/volume.py")
+(deflisten media  :initial `{"status":"Stopped","artist":"","title":"","scroll":""}`
+  "python3 -u scripts/media.py")
+(deflisten cava   :initial `{"big":[],"small":[]}`
+  "python3 -u scripts/cava.py")
+(deflisten net    :initial `{"primary":"","down":"—","up":"—","vpn":false,"wifi":{"enabled":false,"ssid":"","signal":0},"ifaces":[]}`
+  "python3 -u scripts/network.py")
+;; meteo (Open-Meteo), una città alla volta: scripts/weather-set.sh la cambia
+(deflisten weather :initial `{"city":"Lugano","cities":["Lugano","Bellinzona","Locarno"],"ok":false,"loading":true,"temp":"--","icon":"󰖐","desc":"","days":[],"updated":""}`
+  "python3 -u scripts/weather.py")
+;; notifiche swaync: {"text": "5", "alt": "notification" | "none" | "dnd-notification" | ...}
+(deflisten notif :initial `{"text":"0","alt":"none","tooltip":""}`
+  "bash scripts/notif.sh")
+(defpoll bt :interval "5s" :initial `{"powered":false,"devices":[],"count":0}`
+  "bash scripts/bluetooth.sh")
 
-;; ===== Hyprland =====
-;; Prima: defpoll ogni 100ms che lanciava due hyprctl ogni volta.
-;; Ora: deflisten sul socket IPC di Hyprland, aggiornamento solo sugli
-;; eventi di workspace.
-(deflisten workspaces :initial `{"active": 1}` "python -u scripts/hyprland.py")
-
-;; ===== Media player =====
-(defpoll playerctl-status :interval "1s" `playerctl status 2>/dev/null`)
-(defpoll playerctl-metadata :interval "1s" `playerctl metadata -f "{{ artist }} - {{ title }}" 2>/dev/null`)
-(deflisten cava-playing :initial "" "python -u scripts/text-slide.py")
-(deflisten cava-bars :initial "[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]" "bash scripts/cava.sh")
-(deflisten cava-expanded-bars :initial "[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]" "bash scripts/cava-expanded.sh")
-
-;; ===== Sistema =====
-(defpoll power-profile-label :interval "2s" `python scripts/power_profile.py`)
-(defpoll fan-rpm-label :interval "2s" `python scripts/fan_rpm.py`)
-(deflisten disk-usage-label :initial "" "fish scripts/diskspace.fish")
-(deflisten active-window-usage-label :initial "" "python -u scripts/active_window_usage_snmp.py")
-(deflisten network-usage-label :initial "" "python -u scripts/network.py")
+;; ============================================================
+;;  Solo mentre il dashboard è aperto (:run-while)
+;; ============================================================
+(defpoll brightness :interval "2s" :run-while reveal-dashboard :initial "0"
+  `brightnessctl -m | cut -d, -f4 | tr -d %`)
+(defpoll profile :interval "5s" :run-while reveal-dashboard :initial ""
+  `powerprofilesctl get 2>/dev/null`)
+(defpoll fans :interval "3s" :run-while reveal-dashboard :initial ""
+  "python3 scripts/fans.py")
+;; {"name": "Arka", "initial": "A"} (eww 0.5 non ha funzioni sulle stringhe)
+(defpoll user :interval "1h" :run-while reveal-dashboard :initial `{"name":"","initial":""}`
+  "bash scripts/user.sh")
+;; foto profilo: ~/.face se esiste, altrimenti si mostra l'iniziale
+(defpoll face :interval "60s" :run-while reveal-dashboard :initial ""
+  `[ -f ~/.face ] && echo ~/.face || echo ""`)
+(defpoll uptime :interval "60s" :run-while reveal-dashboard :initial ""
+  `awk '{d=int($1/86400); h=int($1%86400/3600); m=int($1%3600/60); if (d) printf "%dg ", d; printf "%dh %02dm", h, m}' /proc/uptime`)
+(defpoll wifi-list :interval "8s" :run-while expand-wifi :initial "[]"
+  "python3 scripts/wifi-list.py")
+(defpoll bt-list :interval "6s" :run-while expand-bt :initial "[]"
+  "bash scripts/bt-list.sh")
+(deflisten activewin :initial `{"class":"","title":"","cpu":0,"ram":"—","procs":0}`
+  "python3 -u scripts/activewindow.py")

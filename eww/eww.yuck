@@ -1,7 +1,8 @@
-;; Config divisa in moduli (prima era tutta in un unico file):
+;; Barra eww v2 — isole + dashboard laterale
 ;;   variables.yuck -> defvar / defpoll / deflisten
-;;   widgets.yuck    -> defwidget
-;;   windows.yuck    -> defwindow
+;;   widgets.yuck   -> isole della barra e sezioni del dashboard
+;;   windows.yuck   -> bar, closer, calendar, dashboard
+;; Avvio:  eww open bar        (i popup li apre scripts/popup.sh)
 (include "./variables.yuck")
 (include "./widgets.yuck")
 (include "./windows.yuck")

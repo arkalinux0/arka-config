@@ -3,6 +3,7 @@
 -- ============================================================
 
 hl.on("hyprland.start", function()
+    hl.exec_cmd("vicinae server")
     -- Keyring e GTK
     hl.exec_cmd("/usr/bin/gnome-keyring-daemon --start --components=pkcs11,secrets,ssh")
     hl.exec_cmd('gsettings set org.gnome.desktop.interface gtk-theme "Materia-dark"')
@@ -15,7 +16,9 @@ hl.on("hyprland.start", function()
     -- hl.exec_cmd("/home/arka/Arch2.sh")
 
     -- Bar, wallpaper, clipboard
-    hl.exec_cmd("eww open-many bar secondary")
+    -- eww: recover.sh chiude eventuali daemon rimasti e ne avvia uno solo con la
+    -- barra (le barre degli altri monitor le apre scripts/session.py)
+    hl.exec_cmd("REASON=autostart ~/.config/eww/scripts/recover.sh")
     -- hl.exec_cmd("waybar")
     hl.exec_cmd("waypaper --restore")
     hl.exec_cmd("copyq")
